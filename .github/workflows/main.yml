@@ -105,3 +105,38 @@ jobs:
         with:
           name: macos-amd64
           path: Pd*-float*
+
+  dist-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get -y --no-install-recommends automake
+      - name: Checkout Code
+        uses: actions/checkout@v2
+      - name: Build
+        run: |
+          ./autogen.sh
+          ./configure
+          make distcheck
+
+  makefile:
+      matrix:
+       experimental: [true]
+       include:
+         - os: "ubuntu-latest"
+           ext: "gnu"
+         - os: "macos-latest"
+           ext: "mac"
+         - os: "windows-latest"
+           ext: "mingw"
+    runs-on: ${{ matrix.os }}
+    env:
+      MAKEFILE: makefile.${{ matrix.ext }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+      - name: Build
+        run: |
+          make -C src -f ${MAKEFILE}
