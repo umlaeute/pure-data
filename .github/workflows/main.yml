@@ -26,7 +26,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get -y --no-install-recommends automake libasound2-dev libjack-dev git
+          sudo apt-get -y --no-install-recommends install automake libasound2-dev libjack-dev git
       - name: Checkout Code
         uses: actions/checkout@v2
       - name: Build
@@ -92,7 +92,7 @@ jobs:
           submodules: true
       - name: Build Tcl/Tk
         run: |
-          mac/tcltk-wish.sh "${TCLTK}
+          mac/tcltk-wish.sh "${TCLTK}"
       - name: Build
         run: |
           ./autogen.sh
