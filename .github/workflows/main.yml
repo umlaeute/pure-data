@@ -7,8 +7,6 @@ on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
     branches: [ master, github-actions ]
-  pull_request:
-    branches: [ master ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -76,7 +74,6 @@ jobs:
           name: mingw-amd64
           path: Pd*-float*
 
-
   macOS-amd64:
     runs-on: macos-latest
     env:
@@ -120,23 +117,3 @@ jobs:
           ./autogen.sh
           ./configure
           make distcheck
-
-  makefile:
-      matrix:
-       experimental: [true]
-       include:
-         - os: "ubuntu-latest"
-           ext: "gnu"
-         - os: "macos-latest"
-           ext: "mac"
-         - os: "windows-latest"
-           ext: "mingw"
-    runs-on: ${{ matrix.os }}
-    env:
-      MAKEFILE: makefile.${{ matrix.ext }}
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-      - name: Build
-        run: |
-          make -C src -f ${MAKEFILE}
