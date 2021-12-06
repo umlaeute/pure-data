@@ -1,0 +1,106 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  Ubuntu-amd64:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+         float: [32, 64]
+    env:
+      FLOATSIZE: ${{ matrix.float }}
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get -y --no-install-recommends automake libasound2-dev libjack-dev git
+      - name: Checkout Code
+        uses: actions/checkout@v2
+      - name: Build
+        run: |
+          ./autogen.sh
+          ./configure --enable-alsa --enable-jack --prefix="/Pd64-float${FLOATSIZE}" CPPFLAGS="-DPD_FLOATSIZE=${FLOATSIZE}"
+          make
+      - name: Install
+        run: make install DESTDIR=$(pwd)
+      - name: Upload Ubuntu artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: ubuntu-amd64
+          path: Pd*-float*
+
+  MinGW-amd64:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+      FLOATSIZE: 32
+    steps:
+      - name: Install MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          release: false
+          path-type: inherit
+          install: >-
+            mingw-w64-x86_64-ntldd-git
+      - name: Checkout Code
+        uses: actions/checkout@v2
+      - name: Build
+        run: |
+          ./autogen.sh
+          ./configure --prefix="/Pd64-float${FLOATSIZE}" CPPFLAGS="-DPD_FLOATSIZE=${FLOATSIZE}"
+          make
+      - name: Install
+        run: make install DESTDIR=$(pwd)
+      - name: DLL dependencies
+        run: |
+          test -e .git-ci/localdeps.win.sh || (wget -q -O .git-ci/localdeps.win.sh "https://git.iem.at/pd/iem-ci/raw/main/localdeps/localdeps.win.sh" && chmod +x .git-ci/localdeps.win.sh) || true
+          if [ -x .git-ci/localdeps.win.sh ]; then find Pd*-float* -type f "(" -name "*.${pd_extension:-m_*}" -o -name "*.dll" -o -name "*.exe" -o -name "*.com" ")" -exec .git-ci/localdeps.win.sh {} +; fi
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: mingw-amd64
+          path: Pd*-float*
+
+
+  macOS-amd64:
+    runs-on: macos-latest
+    env:
+      TCLTK: 8.6.12
+      FLOATSIZE: 32
+    steps:
+      - name: Install macOS packages
+        run: |
+          brew install jack automake autoconf gettext libtool
+      - name: Checkout Code
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Build Tcl/Tk
+        run: |
+          mac/tcltk-wish.sh "${TCLTK}
+      - name: Build
+        run: |
+          ./autogen.sh
+          ./configure --disable-jack-framework --enable-jack CPPFLAGS="-DPD_FLOATSIZE=${FLOATSIZE}"
+          make
+      - name: Install
+        run: mac/osx-app.sh --wish Wish-${TCLTK}.app amd64-float${FLOATSIZE}
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: macos-amd64
+          path: Pd*-float*
