@@ -117,3 +117,24 @@ jobs:
           ./autogen.sh
           ./configure
           make distcheck
+
+
+  makefile:
+    matrix:
+       experimental: [true]
+       include:
+         - os: "ubuntu-latest"
+           ext: "gnu"
+         - os: "macos-latest"
+           ext: "mac"
+         - os: "windows-latest"
+           ext: "mingw"
+    runs-on: ${{ matrix.os }}
+    env:
+      MAKEFILE: makefile.${{ matrix.ext }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build
+        run: |
+          make -C src -f ${MAKEFILE}
