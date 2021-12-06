@@ -120,7 +120,9 @@ jobs:
 
 
   makefile:
-    matrix:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
        experimental: [true]
        include:
          - os: "ubuntu-latest"
@@ -129,7 +131,6 @@ jobs:
            ext: "mac"
          - os: "windows-latest"
            ext: "mingw"
-    runs-on: ${{ matrix.os }}
     env:
       MAKEFILE: makefile.${{ matrix.ext }}
     steps:
