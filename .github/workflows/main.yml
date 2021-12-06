@@ -47,6 +47,7 @@ jobs:
     defaults:
       run:
         shell: msys2 {0}
+    env:
       FLOATSIZE: 32
     steps:
       - name: Install MSYS2
