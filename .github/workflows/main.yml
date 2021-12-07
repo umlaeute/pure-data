@@ -142,9 +142,10 @@ jobs:
            ext: "mingw"
     env:
       MAKEFILE: makefile.${{ matrix.ext }}
+      ARCH: ""
     steps:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Build
         run: |
-          make -C src -f ${MAKEFILE}
+          make -C src -f ${MAKEFILE} ARCH="${ARCH}"
