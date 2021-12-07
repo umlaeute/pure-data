@@ -144,6 +144,11 @@ jobs:
       MAKEFILE: makefile.${{ matrix.ext }}
       ARCH: ""
     steps:
+      - name: APT dependencies
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get -y --no-install-recommends install libasound2-dev
       - name: Checkout
         uses: actions/checkout@v2
       - name: Build
