@@ -138,11 +138,13 @@ jobs:
            ext: "gnu"
          - os: "macos-latest"
            ext: "mac"
+           aflags: "-arch x86_64 -arch arm64"
          - os: "windows-latest"
            ext: "mingw"
+           aflags: "-DDUMMY_ARCH_FLAG"
     env:
       MAKEFILE: makefile.${{ matrix.ext }}
-      ARCH: ""
+      AFLAGS: ${{ matrix.aflags }}
     steps:
       - name: APT dependencies
         if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -153,4 +155,5 @@ jobs:
         uses: actions/checkout@v2
       - name: Build
         run: |
-          make -C src -f ${MAKEFILE} ARCH="${ARCH}" EXTRAARCH="${ARCH}"
+          make -C src -f ${MAKEFILE} ARCH="${AFLAGS}" EXTRAARCH="${AFLAGS}"
+
