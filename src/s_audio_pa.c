@@ -23,6 +23,7 @@
 
 #include "m_pd.h"
 #include "s_stuff.h"
+#include "s_utf8.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -50,7 +51,7 @@
 #endif
 
 /* define this to enable thread signaling instead of polling */
-#define THREADSIGNAL
+// #define THREADSIGNAL
 
     /* LATER try to figure out how to handle default devices in portaudio;
     the way s_audio.c handles them isn't going to work here. */
@@ -402,10 +403,10 @@ int pa_open_audio(int inchans, int outchans, int rate, t_sample *soundin,
     if (outchans > 0 && pa_outdev == -1)
         outchans = 0;
 
-    verbose(PD_VERBOSE, "input device %d, channels %d", pa_indev, inchans);
-    verbose(PD_VERBOSE, "output device %d, channels %d", pa_outdev, outchans);
-    verbose(PD_VERBOSE, "framesperbuf %d, nbufs %d", framesperbuf, nbuffers);
-    verbose(PD_VERBOSE, "rate %d", rate);
+    logpost(NULL, PD_VERBOSE, "input device %d, channels %d", pa_indev, inchans);
+    logpost(NULL, PD_VERBOSE, "output device %d, channels %d", pa_outdev, outchans);
+    logpost(NULL, PD_VERBOSE, "framesperbuf %d, nbufs %d", framesperbuf, nbuffers);
+    logpost(NULL, PD_VERBOSE, "rate %d", rate);
 
     pa_inchans = STUFF->st_inchannels = inchans;
     pa_outchans = STUFF->st_outchannels = outchans;
@@ -463,7 +464,7 @@ int pa_open_audio(int inchans, int outchans, int rate, t_sample *soundin,
         /* Pa_Terminate(); */
         return (1);
     }
-    else verbose(PD_VERBOSE, "... opened OK.");
+    else logpost(NULL, PD_VERBOSE, "... opened OK.");
     return (0);
 }
 
@@ -675,6 +676,26 @@ int pa_send_dacs(void)
     else return (rtnval);
 }
 
+static char*pdi2devname(const PaDeviceInfo*pdi, char*buf, size_t bufsize) {
+    const PaHostApiInfo *api = 0;
+    char utf8device[MAXPDSTRING];
+    utf8device[0] = 0;
+
+    if(!pdi)
+        return 0;
+
+    api = Pa_GetHostApiInfo(pdi->hostApi);
+    if(api)
+        snprintf(utf8device, MAXPDSTRING, "%s: %s",
+            api->name, pdi->name);
+    else
+        snprintf(utf8device, MAXPDSTRING, "%s",
+            pdi->name);
+
+    u8_nativetoutf8(buf, bufsize, utf8device, MAXPDSTRING);
+    return buf;
+}
+
     /* scanning for devices */
 void pa_getdevs(char *indevlist, int *nindevs,
     char *outdevlist, int *noutdevs, int *canmulti,
@@ -687,36 +708,20 @@ void pa_getdevs(char *indevlist, int *nindevs,
     ndev = Pa_GetDeviceCount();
     for (i = 0; i < ndev; i++)
     {
+        char utf8device[MAXPDSTRING];
         const PaDeviceInfo *pdi = Pa_GetDeviceInfo(i);
+        char*devname = pdi2devname(pdi, utf8device, MAXPDSTRING);
         if (pdi->maxInputChannels > 0 && nin < maxndev)
         {
                 /* LATER figure out how to get API name correctly */
             snprintf(indevlist + nin * devdescsize, devdescsize,
-#ifdef _WIN32
-     "%s:%s", (pdi->hostApi == 0 ? "MMIO" : (pdi->hostApi == 1 ? "ASIO" : "?")),
-#else
-#ifdef __APPLE__
-             "%s",
-#else
-            "(%d) %s", pdi->hostApi,
-#endif
-#endif
-                pdi->name);
+                "%s", devname);
             nin++;
         }
         if (pdi->maxOutputChannels > 0 && nout < maxndev)
         {
             snprintf(outdevlist + nout * devdescsize, devdescsize,
-#ifdef _WIN32
-     "%s:%s", (pdi->hostApi == 0 ? "MMIO" : (pdi->hostApi == 1 ? "ASIO" : "?")),
-#else
-#ifdef __APPLE__
-             "%s",
-#else
-            "(%d) %s", pdi->hostApi,
-#endif
-#endif
-                pdi->name);
+                "%s", devname);
             nout++;
         }
     }

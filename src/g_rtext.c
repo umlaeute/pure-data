@@ -46,6 +46,9 @@ t_rtext *rtext_new(t_glist *glist, t_text *who)
     x->x_selstart = x->x_selend = x->x_active =
         x->x_drawnwidth = x->x_drawnheight = 0;
     binbuf_gettext(who->te_binbuf, &x->x_buf, &x->x_bufsize);
+        /* allocate extra space for hidden null terminator */
+    x->x_buf = resizebytes(x->x_buf, x->x_bufsize, x->x_bufsize+1);
+    x->x_buf[x->x_bufsize] = 0;
     glist->gl_editor->e_rtext = x;
     sprintf(x->x_tag, ".x%lx.t%lx", (t_int)glist_getcanvas(x->x_glist),
         (t_int)x);
@@ -68,7 +71,7 @@ void rtext_free(t_rtext *x)
             break;
         }
     }
-    freebytes(x->x_buf, x->x_bufsize);
+    freebytes(x->x_buf, x->x_bufsize + 1); /* extra 0 byte */
     freebytes(x, sizeof *x);
 }
 
@@ -90,7 +93,7 @@ void rtext_getseltext(t_rtext *x, char **buf, int *bufsize)
 
 t_text *rtext_getowner(t_rtext *x)
 {
-    return (x->x_text);;
+    return (x->x_text);
 }
 
 /* convert t_text te_type symbol for use as a Tk tag */
@@ -300,10 +303,10 @@ static void rtext_formatatom(t_rtext *x, int *widthp, int *heightp,
         *outchars_b_p = x->x_text->te_width;
         goto done;
     giveup:
-            /* give up and bash it to "+" or "-" */
-        strcpy(tempbuf, (binbuf_getvec(x->x_text->te_binbuf)->a_w.w_float < 0 ?
-            "-" : "+"));
-        *outchars_b_p = 1;
+            /* give up and bash last char to '>' */
+        tempbuf[x->x_text->te_width-1] = '>';
+        tempbuf[x->x_text->te_width] = 0;
+        *outchars_b_p = x->x_text->te_width;
     done: ;
         *indexp = findx;
         *widthp = x->x_text->te_width * fontwidth;
@@ -329,27 +332,27 @@ static void rtext_formatatom(t_rtext *x, int *widthp, int *heightp,
                 break;
             }
             memcpy(tempbuf + prev_b, x->x_buf + prev_b, *outchars_b_p - prev_b);
-                /* if box is full and there's more, bash last char to '+' */
+                /* if box is full and there's more, bash last char to '>' */
             if (outchars_c == widthlimit_c-1 && x->x_bufsize > *(outchars_b_p)
                  && (x->x_buf[*(outchars_b_p)] != ' ' ||
                     x->x_bufsize > *(outchars_b_p)+1))
             {
-                post("putchars %d, prev %d, byte %d",
-                    *(outchars_b_p), prev_b, x->x_buf[*(outchars_b_p)]);
                 tempbuf[prev_b] = '>';
             }
         }
-        *widthp = (outchars_c > 3 ? outchars_c : 3) * fontwidth;
+        if (x->x_text->te_width > 0)
+            *widthp = x->x_text->te_width * fontwidth;
+        else *widthp = (outchars_c > 3 ? outchars_c : 3) * fontwidth;
         tempbuf[*outchars_b_p] = 0;
     }
-    if (*indexp >= *outchars_b_p)
-        *indexp = *outchars_b_p - 1;
+    if (*indexp > *outchars_b_p)
+        *indexp = *outchars_b_p;
     if (*indexp < 0)
         *indexp = 0;
     *selstart_b_p = x->x_selstart;
     *selend_b_p = x->x_selend;
-    *widthp += (LMARGIN + RMARGIN) * glist_getzoom(x->x_glist);
-    *heightp = fontheight + (TMARGIN + BMARGIN) * glist_getzoom(x->x_glist);
+    *widthp += (LMARGIN + RMARGIN - 2) * glist_getzoom(x->x_glist);
+    *heightp = fontheight + (TMARGIN + BMARGIN - 1) * glist_getzoom(x->x_glist);
 }
 
     /* the following routine computes line breaks and carries out
@@ -368,31 +371,22 @@ static void rtext_formatatom(t_rtext *x, int *widthp, int *heightp,
         a limit of 1950 characters, imposed by sys_vgui(). */
 #define UPBUFSIZE 4000
 
+void text_getfont(t_text *x, t_glist *thisglist,
+    int *fheightp, int *fwidthp, int *guifsize);
+
 static void rtext_senditup(t_rtext *x, int action, int *widthp, int *heightp,
     int *indexp)
 {
     char smallbuf[200], *tempbuf;
-    int outchars_b = 0, font, fontwidth, fontheight;
+    int outchars_b = 0, guifontsize, fontwidth, fontheight;
     t_canvas *canvas = glist_getcanvas(x->x_glist);
     char smallescbuf[400], *escbuf = 0;
     size_t escchars = 0;
     int selstart_b, selend_b;   /* beginning and end of selection in bytes */
         /* if we're a GOP (the new, "goprect" style) borrow the font size
         from the inside to preserve the spacing */
-    if (pd_class(&x->x_text->te_pd) == canvas_class &&
-        ((t_glist *)(x->x_text))->gl_isgraph &&
-        ((t_glist *)(x->x_text))->gl_goprect)
-    {
-        font =  glist_getfont((t_glist *)(x->x_text));
-        fontwidth =  glist_fontwidth((t_glist *)(x->x_text));
-        fontheight =  glist_fontheight((t_glist *)(x->x_text));
-    }
-    else
-    {
-        font = glist_getfont(x->x_glist);
-        fontwidth = glist_fontwidth(x->x_glist);
-        fontheight = glist_fontheight(x->x_glist);
-    }
+
+    text_getfont(x->x_text, x->x_glist, &fontwidth, &fontheight, &guifontsize);
     if (x->x_bufsize >= 100)
          tempbuf = (char *)t_getbytes(2 * x->x_bufsize + 1);
     else tempbuf = smallbuf;
@@ -440,11 +434,11 @@ static void rtext_senditup(t_rtext *x, int action, int *widthp, int *heightp,
             tcl/tk by escaping the close brace otherwise.  The GUI code
             drops the last character in the string. */
         sys_vgui("pdtk_text_new .x%lx.c {%s %s text} %d %d {%s } %d %s\n",
-            (long)canvas, x->x_tag, rtext_gettype(x)->s_name,
+            canvas, x->x_tag, rtext_gettype(x)->s_name,
             text_xpix(x->x_text, x->x_glist) + lmargin,
                 text_ypix(x->x_text, x->x_glist) + tmargin,
             escbuf,
-            sys_hostfontsize(font, glist_getzoom(x->x_glist)),
+            guifontsize,
             (glist_isselected(x->x_glist,
                 &x->x_text->te_g)? "blue" : "black"));
     }
@@ -488,8 +482,11 @@ void rtext_retext(t_rtext *x)
 {
     int w = 0, h = 0, indx;
     t_text *text = x->x_text;
-    t_freebytes(x->x_buf, x->x_bufsize);
+    t_freebytes(x->x_buf, x->x_bufsize + 1); /* extra 0 byte */
     binbuf_gettext(text->te_binbuf, &x->x_buf, &x->x_bufsize);
+        /* allocate extra space for hidden null terminator */
+    x->x_buf = resizebytes(x->x_buf, x->x_bufsize, x->x_bufsize+1);
+    x->x_buf[x->x_bufsize] = 0;
     rtext_senditup(x, SEND_UPDATE, &w, &h, &indx);
 }
 
@@ -543,6 +540,8 @@ void rtext_select(t_rtext *x, int state)
         x->x_tag, (state? "blue" : "black"));
 }
 
+void gatom_undarken(t_text *x);
+
 void rtext_activate(t_rtext *x, int state)
 {
     int w = 0, h = 0, indx;
@@ -563,6 +562,8 @@ void rtext_activate(t_rtext *x, int state)
         if (glist->gl_editor->e_textedfor == x)
             glist->gl_editor->e_textedfor = 0;
         x->x_active = 0;
+        if (x->x_text->te_type == T_ATOM)
+            gatom_undarken(x->x_text);
     }
     rtext_senditup(x, SEND_UPDATE, &w, &h, &indx);
 }
@@ -591,7 +592,7 @@ int rtext_findatomfor(t_rtext *x, int xpos, int ypos)
     return (natom-1);
 }
 
-void gatom_key(void *z, t_floatarg f);
+void gatom_key(void *z, t_symbol *keysym, t_floatarg f);
 
 void rtext_key(t_rtext *x, int keynum, t_symbol *keysym)
 {
@@ -600,7 +601,7 @@ void rtext_key(t_rtext *x, int keynum, t_symbol *keysym)
         /* CR to atom boxes sends message and resets */
     if (keynum == '\n' && x->x_text->te_type == T_ATOM)
     {
-        gatom_key(x->x_text, keynum);
+        gatom_key(x->x_text, keysym, keynum);
         return;
     }
     if (keynum)
@@ -628,7 +629,9 @@ void rtext_key(t_rtext *x, int keynum, t_symbol *keysym)
         for (i = x->x_selend; i < x->x_bufsize; i++)
             x->x_buf[i- ndel] = x->x_buf[i];
         newsize = x->x_bufsize - ndel;
-        x->x_buf = resizebytes(x->x_buf, x->x_bufsize, newsize);
+            /* allocate extra space for hidden null terminator */
+        x->x_buf = resizebytes(x->x_buf, x->x_bufsize, newsize+1);
+        x->x_buf[newsize] = 0;
         x->x_bufsize = newsize;
 
 /* at Guenter's suggestion, use 'n>31' to test whether a character might
@@ -643,10 +646,12 @@ be printable in whatever 8-bit character set we find ourselves. */
         if (n == '\n' || (n > 31 && n < 127))
         {
             newsize = x->x_bufsize+1;
-            x->x_buf = resizebytes(x->x_buf, x->x_bufsize, newsize);
+                /* allocate extra space for hidden null terminator */
+            x->x_buf = resizebytes(x->x_buf, x->x_bufsize, newsize+1);
             for (i = x->x_bufsize; i > x->x_selstart; i--)
                 x->x_buf[i] = x->x_buf[i-1];
             x->x_buf[x->x_selstart] = n;
+            x->x_buf[newsize] = 0;
             x->x_bufsize = newsize;
             x->x_selstart = x->x_selstart + 1;
         }
@@ -655,9 +660,12 @@ be printable in whatever 8-bit character set we find ourselves. */
         {
             int ch_nbytes = u8_wc_nbytes(n);
             newsize = x->x_bufsize + ch_nbytes;
-            x->x_buf = resizebytes(x->x_buf, x->x_bufsize, newsize);
+                /* allocate extra space for hidden null terminator */
+            x->x_buf = resizebytes(x->x_buf, x->x_bufsize, newsize+1);
+
             for (i = newsize-1; i > x->x_selstart; i--)
                 x->x_buf[i] = x->x_buf[i-ch_nbytes];
+            x->x_buf[newsize] = 0;
             x->x_bufsize = newsize;
             /*-- moo: assume canvas_key() has encoded keysym as UTF-8 */
             strncpy(x->x_buf+x->x_selstart, keysym->s_name, ch_nbytes);

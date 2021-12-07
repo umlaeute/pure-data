@@ -25,7 +25,7 @@ char* pdgui_strnescape(char *dst, size_t dstlen, const char *src, size_t srclen)
     while(1)
     {
         int c = src[ptin];
-        if (c == '\\' || c == '{' || c == '}') {
+        if (c == '\\' || c == '{' || c == '}' || c == '[' || c == ']') {
             dst[ptout++] = '\\';
             if (dstlen && ptout >= dstlen){
                 dst[ptout-1] = 0;
@@ -46,14 +46,6 @@ char* pdgui_strnescape(char *dst, size_t dstlen, const char *src, size_t srclen)
         dst[dstlen-1]=0;
 
     return dst;
-}
-
-static char* strnpointerid(char *dest, const void *pointer, size_t len)
-{
-    *dest=0;
-    if (pointer)
-        snprintf(dest, len, ".x%lx", (unsigned long)pointer);
-    return dest;
 }
 
 static void dopost(const char *s)
@@ -105,19 +97,18 @@ static void doerror(const void *object, const char *s)
 #endif
     }
     else
-    {
-        char obuf[MAXPDSTRING];
-        sys_vgui("::pdwindow::logpost {%s} 1 {%s}\n",
-                 strnpointerid(obuf, object, MAXPDSTRING),
-                 pdgui_strnescape(upbuf, MAXPDSTRING, s, 0));
-    }
+        sys_vgui("::pdwindow::logpost .x%lx 1 {%s}\n",
+            object, pdgui_strnescape(upbuf, MAXPDSTRING, s, 0));
 }
 
 static void dologpost(const void *object, const int level, const char *s)
 {
     char upbuf[MAXPDSTRING];
     upbuf[MAXPDSTRING-1]=0;
-
+        /* if it's a verbose message and we aren't set to 'verbose' just do
+            nothing */
+    if (level >= PD_VERBOSE && !sys_verbose)
+        return;
     // what about sys_printhook_verbose ?
     if (sys_printhook)
     {
@@ -138,20 +129,15 @@ static void dologpost(const void *object, const int level, const char *s)
 #endif
     }
     else
-    {
-        char obuf[MAXPDSTRING];
-        sys_vgui("::pdwindow::logpost {%s} %d {%s}\n",
-                 strnpointerid(obuf, object, MAXPDSTRING),
-                 level, pdgui_strnescape(upbuf, MAXPDSTRING, s, 0));
-    }
+        sys_vgui("::pdwindow::logpost .x%lx %d {%s}\n",
+            object, level, pdgui_strnescape(upbuf, MAXPDSTRING, s, 0));
 }
 
-void logpost(const void *object, const int level, const char *fmt, ...)
+void logpost(const void *object, int level, const char *fmt, ...)
 {
     char buf[MAXPDSTRING];
     va_list ap;
-    t_int arg[8];
-    int i;
+    if (level > PD_DEBUG && !sys_verbose) return;
     va_start(ap, fmt);
     vsnprintf(buf, MAXPDSTRING-1, fmt, ap);
     va_end(ap);
@@ -164,8 +150,7 @@ void startlogpost(const void *object, const int level, const char *fmt, ...)
 {
     char buf[MAXPDSTRING];
     va_list ap;
-    t_int arg[8];
-    int i;
+    if (level > PD_DEBUG && !sys_verbose) return;
     va_start(ap, fmt);
     vsnprintf(buf, MAXPDSTRING-1, fmt, ap);
     va_end(ap);
@@ -256,22 +241,22 @@ void error(const char *fmt, ...)
 }
 #endif
 
+/* deprecated in favor of logpost() */
 void verbose(int level, const char *fmt, ...)
 {
     char buf[MAXPDSTRING];
     va_list ap;
-    t_int arg[8];
-    int i;
-    int loglevel=level+3;
 
-    if(level>sys_verbose)return;
+    if (level > sys_verbose) return;
 
     va_start(ap, fmt);
     vsnprintf(buf, MAXPDSTRING-1, fmt, ap);
     va_end(ap);
     strcat(buf, "\n");
 
-    dologpost(NULL, loglevel, buf);
+        /* log levels for verbose() traditionally start at -3,
+        so we have to adjust it before passing it on to dologpost() */
+    dologpost(NULL, level + 3, buf);
 }
 
     /* here's the good way to log errors -- keep a pointer to the

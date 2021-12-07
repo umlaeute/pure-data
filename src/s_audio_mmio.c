@@ -7,6 +7,7 @@
 
 #include "m_pd.h"
 #include "s_stuff.h"
+#include "s_utf8.h"
 #include <stdio.h>
 
 #include <windows.h>
@@ -148,7 +149,7 @@ int mmio_do_open_audio(void)
     int i, j;
     UINT mmresult;
     int nad, nda;
-    verbose(PD_VERBOSE, "%d devices in, %d devices out",
+    logpost(NULL, PD_VERBOSE, "%d devices in, %d devices out",
             nt_nwavein, nt_nwaveout);
 
     form.wf.wFormatTag = WAVE_FORMAT_PCM;
@@ -225,7 +226,7 @@ void mmio_close_audio(void)
 {
     int errcode;
     int nda, nad;
-    verbose(PD_VERBOSE, "closing audio...");
+    logpost(NULL, PD_VERBOSE, "closing audio...");
 
     for (nda=0; nda < nt_nwaveout; nda++) /*if (nt_nwaveout) wini */
     {
@@ -249,7 +250,7 @@ void mmio_close_audio(void)
     mmio_freebufs(ntsnd_invec, nt_nwavein, nt_naudiobuffer);
     mmio_freebufs(ntsnd_outvec, nt_nwaveout, nt_naudiobuffer);
     nt_nwavein = nt_nwaveout = 0;
-    verbose(PD_VERBOSE, "done closing audio...");
+    logpost(NULL, PD_VERBOSE, "done closing audio...");
 }
 
 
@@ -700,9 +701,9 @@ int mmio_open_audio(int naudioindev, int *audioindev,
 {
     int nbuf;
 
-    verbose(PD_VERBOSE, "opening audio...");
+    logpost(NULL, PD_VERBOSE, "opening audio...");
     nt_blocksize = (blocksize ? blocksize : DEFREALDACBLKSIZE);
-    nbuf = (sys_schedadvance * rate )/ (nt_blocksize * 1000000.);
+    nbuf = (double)sys_schedadvance / 1000000. * rate / nt_blocksize;
     if (nbuf >= MAXBUFFER)
     {
         fprintf(stderr, "pd: audio buffering maxed out to %d\n",
@@ -726,7 +727,7 @@ int mmio_open_audio(int naudioindev, int *audioindev,
     if (naudiooutdev > 1 || naudioindev > 1)
  post("separate audio device choice not supported; using sequential devices.");
     return (mmio_do_open_audio());
-    verbose(PD_VERBOSE, "done opening audio...");
+    logpost(NULL, PD_VERBOSE, "done opening audio...");
 }
 
 
@@ -770,6 +771,7 @@ void mmio_getdevs(char *indevlist, int *nindevs,
         int maxndev, int devdescsize)
 {
     int  wRtn, ndev, i;
+    char utf8device[MAXPDSTRING];
 
     *canmulti = 2;  /* supports multiple devices */
     ndev = waveInGetNumDevs();
@@ -780,9 +782,11 @@ void mmio_getdevs(char *indevlist, int *nindevs,
     {
         WAVEINCAPS wicap;
         wRtn = waveInGetDevCaps(i, (LPWAVEINCAPS) &wicap, sizeof(wicap));
+        if (!wRtn)
+            u8_nativetoutf8(utf8device, MAXPDSTRING, wicap.szPname, -1);
         _snprintf(indevlist + i * devdescsize, devdescsize, "%s",
-            (wRtn ? "???" : wicap.szPname));
-        outdevlist[(i+1) * devdescsize - 1] = 0;
+            (wRtn ? "???" : utf8device));
+        indevlist[(i+1) * devdescsize - 1] = 0;
     }
 
     ndev = waveOutGetNumDevs();
@@ -793,8 +797,10 @@ void mmio_getdevs(char *indevlist, int *nindevs,
     {
         WAVEOUTCAPS wocap;
         wRtn = waveOutGetDevCaps(i, (LPWAVEOUTCAPS) &wocap, sizeof(wocap));
+        if (!wRtn)
+            u8_nativetoutf8(utf8device, MAXPDSTRING, wocap.szPname, -1);
         _snprintf(outdevlist + i * devdescsize,  devdescsize, "%s",
-            (wRtn ? "???" : wocap.szPname));
+            (wRtn ? "???" : utf8device));
         outdevlist[(i+1) * devdescsize - 1] = 0;
     }
 }

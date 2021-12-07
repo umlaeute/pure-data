@@ -133,16 +133,13 @@ typedef struct _audiosettings
 
 #define DEFMIDIDEV 0
 
-#define DEFAULTSRATE 48000
-#ifdef _WIN32
+#define DEFAULTSRATE 44100
+#if defined(_WIN32)
 #define DEFAULTADVANCE 80
-#define MMIODEFBLOCKSIZE 512
-#else
-#ifdef __APPLE__
+#elif defined(__APPLE__)
 #define DEFAULTADVANCE 5    /* this is in addition to their own delay */
 #else
 #define DEFAULTADVANCE 25
-#endif
 #endif
 
 typedef void (*t_audiocallback)(void);
@@ -338,6 +335,7 @@ EXTERN void socketreceiver_set_fromaddrfn(t_socketreceiver *x,
     t_socketfromaddrfn fromaddrfn);
 EXTERN void sys_sockerror(const char *s);
 EXTERN void sys_closesocket(int fd);
+EXTERN unsigned char *sys_getrecvbuf(unsigned int *size);
 
 typedef void (*t_fdpollfn)(void *ptr, int fd);
 EXTERN void sys_addpollfn(int fd, t_fdpollfn fn, void *ptr);
