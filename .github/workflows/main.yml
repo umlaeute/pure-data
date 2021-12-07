@@ -169,7 +169,7 @@ jobs:
            aflags: "/D__i386__"
           #arch: ["amd64", "amd64_x86", "amd64_arm64"]
     env:
-      AFLAGS: {{ matrix.aflags }}
+      AFLAGS: ${{ matrix.aflags }}
     steps:
       - uses: actions/checkout@v2
       - uses: ilammy/msvc-dev-cmd@v1
