@@ -13,6 +13,133 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
+  Ubuntu-amd64:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+         float: [32, 64]
+    env:
+      FLOATSIZE: ${{ matrix.float }}
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get -y --no-install-recommends install automake libasound2-dev libjack-dev
+      - name: Checkout Code
+        uses: actions/checkout@v2
+      - name: Build
+        run: |
+          ./autogen.sh
+          ./configure --enable-alsa --enable-jack --prefix="/Pd64-float${FLOATSIZE}" CPPFLAGS="-DPD_FLOATSIZE=${FLOATSIZE}"
+          make
+      - name: Install
+        run: make install DESTDIR=$(pwd)
+      - name: Upload Ubuntu artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: ubuntu-amd64
+          path: Pd*-float*
+
+  MinGW-amd64:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    strategy:
+      fail-fast: false
+      matrix:
+         float: [32]
+    env:
+      FLOATSIZE: ${{ matrix.float }}
+    steps:
+      - name: Install MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          release: false
+          path-type: inherit
+          install: >-
+            mingw-w64-x86_64-ntldd-git
+      - name: Checkout Code
+        uses: actions/checkout@v2
+      - name: Build
+        run: |
+          ./autogen.sh
+          ./configure --prefix="/Pd64-float${FLOATSIZE}" CPPFLAGS="-DPD_FLOATSIZE=${FLOATSIZE}"
+          make
+      - name: Install
+        run: make install DESTDIR=$(pwd)
+      - name: DLL dependencies
+        run: |
+          test -e .git-ci/localdeps.win.sh || (wget -q -O .git-ci/localdeps.win.sh "https://git.iem.at/pd/iem-ci/raw/main/localdeps/localdeps.win.sh" && chmod +x .git-ci/localdeps.win.sh) || true
+          if [ -x .git-ci/localdeps.win.sh ]; then find Pd*-float* -type f "(" -name "*.${pd_extension:-m_*}" -o -name "*.dll" -o -name "*.exe" -o -name "*.com" ")" -exec .git-ci/localdeps.win.sh {} +; fi
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: mingw-amd64
+          path: Pd*-float*
+
+  macOS-amd64:
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+         float: [32]
+    env:
+      FLOATSIZE: ${{ matrix.float }}
+      TCLTK: 8.6.12
+    steps:
+      - name: Install macOS packages
+        run: |
+          brew install jack automake autoconf gettext libtool
+      - name: Checkout Code
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Build Tcl/Tk
+        run: |
+          mac/tcltk-wish.sh "${TCLTK}"
+      - name: Build
+        run: |
+          ./autogen.sh
+          ./configure --disable-jack-framework --enable-jack CPPFLAGS="-DPD_FLOATSIZE=${FLOATSIZE}"
+          make
+      - name: Install
+        run: mac/osx-app.sh --wish Wish-${TCLTK}.app amd64-float${FLOATSIZE}
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: macos-amd64
+          path: Pd*-float*
+
+  dist-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get -y --no-install-recommends install automake libasound2-dev
+      - name: Checkout Code
+        uses: actions/checkout@v2
+      - name: Build
+        run: |
+          ./autogen.sh
+          ./configure
+          make distcheck
+
+  makefile_gnu:
+    runs-on: ubuntu-latest
+    steps:
+      - name: APT dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get -y --no-install-recommends install libasound2-dev
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build
+        run: |
+          make -C src -f makefile.gnu
+
   makefile_mac:
     runs-on: macos-latest
     steps:
