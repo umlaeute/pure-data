@@ -64,6 +64,7 @@ jobs:
         run: |
           curl -o pthreads.zip ftp://sourceware.org/pub/pthreads-win32/pthreads-w32-2-9-1-release.zip
           unzip pthreads.zip -d pthreads
+          mkdir -p src bin
           cp pthreads/Pre-built.2/include/* src/
           cp pthreads/Pre-built.2/dll/${arch}/pthreadVC2.dll bin/pthreadVC2.dll
           cp pthreads/Pre-built.2/lib/${arch}/pthreadVC2.lib bin/pthreadVC.lib
