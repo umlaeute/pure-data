@@ -127,7 +127,7 @@ jobs:
           ./configure
           make distcheck
 
-  makefile.gnu:
+  makefile_gnu:
     runs-on: ubuntu-latest
     steps:
       - name: APT dependencies
@@ -140,7 +140,7 @@ jobs:
         run: |
           make -C src -f makefile.gnu
 
-  makefile.mac:
+  makefile_mac:
     runs-on: mac-latest
     steps:
       - name: Checkout
@@ -149,7 +149,7 @@ jobs:
         run: |
           make -C src -f makefile.mac ARCH="" EXTRAARCH=""
 
-  makefile.mingw:
+  makefile_mingw:
     runs-on: windows-latest
     defaults:
       run:
@@ -167,7 +167,7 @@ jobs:
           make -C src -f makefile.mingw
 
 
-  makefile.msvc:
+  makefile_msvc:
     runs-on: windows-latest
     strategy:
       fail-fast: false
