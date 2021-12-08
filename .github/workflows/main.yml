@@ -62,7 +62,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: pthreads
         run: |
-          wget -O pthreads.zip ftp://sourceware.org/pub/pthreads-win32/pthreads-w32-2-9-1-release.zip
+          curl -o pthreads.zip ftp://sourceware.org/pub/pthreads-win32/pthreads-w32-2-9-1-release.zip
           unzip pthreads.zip -d pthreads
           cp pthreads/Pre-built.2/include/* src/
           cp pthreads/Pre-built.2/dll/${arch}/pthreadVC2.dll bin/pthreadVC2.dll
