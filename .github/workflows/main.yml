@@ -76,4 +76,4 @@ jobs:
       - name: Build
         run: |
           cd src
-          nmake /f makefile.msvc AFLAGS=${env:AFLAGS}
+          nmake /f makefile.msvc AFLAGS="${env:AFLAGS} /DHAVE_STRUCT_TIMESPEC=1"
