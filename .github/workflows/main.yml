@@ -127,27 +127,10 @@ jobs:
           ./configure
           make distcheck
 
-
-  makefile:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-       include:
-         - os: "ubuntu-latest"
-           ext: "gnu"
-         - os: "macos-latest"
-           ext: "mac"
-           aflags: "-arch x86_64 -arch arm64"
-         - os: "windows-latest"
-           ext: "mingw"
-           aflags: "-DDUMMY_ARCH_FLAG"
-    env:
-      MAKEFILE: makefile.${{ matrix.ext }}
-      AFLAGS: ${{ matrix.aflags }}
+  makefile.gnu:
+    runs-on: ubuntu-latest
     steps:
       - name: APT dependencies
-        if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
           sudo apt-get update
           sudo apt-get -y --no-install-recommends install libasound2-dev
@@ -155,9 +138,36 @@ jobs:
         uses: actions/checkout@v2
       - name: Build
         run: |
-          make -C src -f ${MAKEFILE} ARCH="${AFLAGS}" EXTRAARCH="${AFLAGS}"
+          make -C src -f makefile.gnu
 
-  nmakefile:
+  makefile.mac:
+    runs-on: mac-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build
+        run: |
+          make -C src -f makefile.mac ARCH="" EXTRAARCH=""
+
+  makefile.mingw:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - name: Install MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          release: false
+          path-type: inherit
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build
+        run: |
+          make -C src -f makefile.mingw
+
+
+  makefile.msvc:
     runs-on: windows-latest
     strategy:
       fail-fast: false
