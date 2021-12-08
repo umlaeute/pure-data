@@ -182,7 +182,12 @@ jobs:
       AFLAGS: ${{ matrix.aflags }}
     steps:
       - uses: actions/checkout@v2
-      - uses: ilammy/msvc-dev-cmd@v1
+      - name: pthreads
+        run: |
+          tar --strip-components=1 -xvf msw/pdprototype.tgz pd/bin pd/src
+        shell: 'bash'
+      - name: setup Visual Studio Cmdline
+        uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: ${{ matrix.arch }}
       - name: Build
