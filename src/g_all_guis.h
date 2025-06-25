@@ -170,9 +170,9 @@ typedef struct _iemgui
     t_iem_fstyle_flags x_fsf;
     int                x_fontsize;
     t_iem_init_symargs x_isa;
-    int                x_fcol;
-    int                x_bcol;
-    int                x_lcol;
+    t_symbol          *x_fcol;
+    t_symbol          *x_bcol;
+    t_symbol          *x_lcol;
     /* send/receive/label as used ($args expanded) */
     t_symbol           *x_snd;              /* send symbol */
     t_symbol           *x_rcv;              /* receive */
@@ -305,6 +305,8 @@ EXTERN void iemgui_newzoom(t_iemgui *iemgui);
 EXTERN void iemgui_properties(t_iemgui *iemgui, t_symbol **srl);
 EXTERN int iemgui_dialog(t_iemgui *iemgui, t_symbol **srl, int argc, t_atom *argv);
 EXTERN void iemgui_setdialogatoms(t_iemgui *iemgui, int argc, t_atom*argv);
+
+EXTERN t_symbol*iemgui_hexcolor2symbol(int color);
 
 EXTERN int canvas_getdollarzero(void);
 
