@@ -117,12 +117,44 @@ proc ::dialog_iemgui::clip_fontsize {mytoplevel} {
     set ::dialog_iemgui::var_label_fontsize($vid) [clip $::dialog_iemgui::var_label_fontsize($vid) $::dialog_iemgui::min_fontsize]
 }
 
+proc ::dialog_iemgui::resolve_color {color type} {
+    switch -- $color {
+        "transparent" { return "" }
+        "default" {
+            switch -- $type {
+                "background" {return "white"}
+                "foreground" {return "black"}
+                "label" {return "black"}
+            }
+        }
+        "reset" {
+            switch -- $type {
+                "background" {return "white"}
+                "foreground" {return "black"}
+                "label" {return "black"}
+            }
+        }
+    }
+    return $color
+}
+
 proc ::dialog_iemgui::set_col_example {mytoplevel} {
     set vid [string trimleft $mytoplevel .]
 
-    $mytoplevel.colors.sections.exp.c itemconfigure label -fill $::dialog_iemgui::var_color_label($vid)
-    $mytoplevel.colors.sections.exp.c itemconfigure foreground -fill $::dialog_iemgui::var_color_foreground($vid)
-    $mytoplevel.colors.sections.exp.c itemconfigure background -fill $::dialog_iemgui::var_color_background($vid)
+    foreach t {label foreground background} {
+        set arrayname ::dialog_iemgui::var_color_${t}
+        foreach {v c} [array get $arrayname $vid] {
+            if { $v eq $vid } {
+
+                $mytoplevel.colors.sections.exp.c itemconfigure $t -fill [::dialog_iemgui::resolve_color $c $t]
+                break
+            }
+        }
+    }
+
+    #$mytoplevel.colors.sections.exp.c itemconfigure label -fill $::dialog_iemgui::var_color_label($vid)
+    #$mytoplevel.colors.sections.exp.c itemconfigure foreground -fill $::dialog_iemgui::var_color_foreground($vid)
+    #$mytoplevel.colors.sections.exp.c itemconfigure background -fill $::dialog_iemgui::var_color_background($vid)
 
     # for OSX live updates
     if {$::windowingsystem eq "aqua"} {
@@ -599,7 +631,20 @@ proc ::dialog_iemgui::pdtk_iemgui_dialog {mytoplevel mainheader dim_header_UNUSE
 
     frame ${mytoplevel}.colors.palette
     pack  ${mytoplevel}.colors.palette -side top
-    set palette $mytoplevel.colors.palette
+    frame ${mytoplevel}.colors.palette.left -padx 7
+    pack  ${mytoplevel}.colors.palette.left -side left
+    frame ${mytoplevel}.colors.palette.right
+    pack  ${mytoplevel}.colors.palette.right -side left
+
+    set palette $mytoplevel.colors.palette.left
+    foreach {x c} {"default" "default" transparent "" reset reset} {
+        button ${palette}.$x -text $x \
+            -padx 0 -pady 0 \
+            -command [list ::dialog_iemgui::preset_col $mytoplevel $c]
+        pack ${palette}.$x -fill x
+    }
+
+    set palette $mytoplevel.colors.palette.right
     # color scheme by Mary Ann Benedetto http://piR2.org
     foreach r {r1 r2 r3} hexcols {
        { "#FFFFFF" "#DFDFDF" "#BBBBBB" "#FFC7C6" "#FFE3C6" "#FEFFC6" "#C6FFC7" "#C6FEFF" "#C7C6FF" "#E3C6FF" }
