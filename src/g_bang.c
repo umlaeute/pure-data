@@ -52,7 +52,7 @@ static void bng_draw_config(t_bng* x, t_glist* glist)
         xpos + x->x_gui.x_ldx * zoom, ypos + x->x_gui.x_ldy * zoom);
     pdgui_vmess(0, "crs rA rk", canvas, "itemconfigure", tag,
         "-font", 3, fontatoms,
-        "-fill", (x->x_gui.x_fsf.x_selected ? IEM_GUI_COLOR_SELECTED : x->x_gui.x_lcol));
+        "-fill", (x->x_gui.x_fsf.x_selected ? iemgui_hexcolor2symbol(IEM_GUI_COLOR_SELECTED) : x->x_gui.x_lcol));
     iemgui_dolabel(x, &x->x_gui, x->x_gui.x_lab, 1);
 }
 
@@ -82,18 +82,18 @@ static void bng_draw_new(t_bng *x, t_glist *glist)
 static void bng_draw_select(t_bng* x, t_glist* glist)
 {
     t_canvas *canvas = glist_getcanvas(glist);
-    int col = IEM_GUI_COLOR_NORMAL, lcol = x->x_gui.x_lcol;
+    t_symbol *col = IEM_GUI_COLOR_NORMAL, *lcol = x->x_gui.x_lcol;
     char tag[128];
 
     if(x->x_gui.x_fsf.x_selected)
-        col = lcol = IEM_GUI_COLOR_SELECTED;
+        col = lcol = iemgui_hexcolor2symbol(IEM_GUI_COLOR_SELECTED);
 
     sprintf(tag, "%pBASE", x);
-    pdgui_vmess(0, "crs rk", canvas, "itemconfigure", tag, "-outline", col);
+    pdgui_vmess(0, "crs rs", canvas, "itemconfigure", tag, "-outline", col);
     sprintf(tag, "%pBUT", x);
-    pdgui_vmess(0, "crs rk", canvas, "itemconfigure", tag, "-outline", col);
+    pdgui_vmess(0, "crs rs", canvas, "itemconfigure", tag, "-outline", col);
     sprintf(tag, "%pLABEL", x);
-    pdgui_vmess(0, "crs rk", canvas, "itemconfigure", tag, "-fill", lcol);
+    pdgui_vmess(0, "crs rs", canvas, "itemconfigure", tag, "-fill", lcol);
 }
 
 static void bng_draw_update(t_bng *x, t_glist *glist)
@@ -102,7 +102,7 @@ static void bng_draw_update(t_bng *x, t_glist *glist)
     {
         char tag[128];
         sprintf(tag, "%pBUT", x);
-        pdgui_vmess(0, "crs rk", glist_getcanvas(glist), "itemconfigure", tag,
+        pdgui_vmess(0, "crs rs", glist_getcanvas(glist), "itemconfigure", tag,
             "-fill", (x->x_flashed ? x->x_gui.x_fcol : x->x_gui.x_bcol));
     }
 }
