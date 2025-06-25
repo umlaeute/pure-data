@@ -120,20 +120,9 @@ proc ::dialog_iemgui::clip_fontsize {mytoplevel} {
 proc ::dialog_iemgui::set_col_example {mytoplevel} {
     set vid [string trimleft $mytoplevel .]
 
-    set fgcol $::dialog_iemgui::var_color_label($vid)
-    $mytoplevel.colors.sections.exp.lb_bk configure \
-        -background $::dialog_iemgui::var_color_background($vid) \
-        -activebackground $::dialog_iemgui::var_color_background($vid) \
-        -foreground $fgcol -activeforeground $fgcol
-
-    set fgcol $::dialog_iemgui::var_color_foreground($vid)
-    if { $fgcol eq "none" } {
-        set fgcol $::dialog_iemgui::var_color_background($vid)
-    }
-    $mytoplevel.colors.sections.exp.fr_bk configure \
-        -background $::dialog_iemgui::var_color_background($vid) \
-        -activebackground $::dialog_iemgui::var_color_background($vid) \
-        -foreground $fgcol -activeforeground $fgcol
+    $mytoplevel.colors.sections.exp.c itemconfigure label -fill $::dialog_iemgui::var_color_label($vid)
+    $mytoplevel.colors.sections.exp.c itemconfigure foreground -fill $::dialog_iemgui::var_color_foreground($vid)
+    $mytoplevel.colors.sections.exp.c itemconfigure background -fill $::dialog_iemgui::var_color_background($vid)
 
     # for OSX live updates
     if {$::windowingsystem eq "aqua"} {
@@ -231,8 +220,7 @@ proc ::dialog_iemgui::toggle_font {mytoplevel gn_f} {
     $mytoplevel.label.fontpopup_label configure -text $current_font \
         -font [list $current_font 16 $::font_weight]
     $mytoplevel.label.name_entry configure -font $current_font_spec
-    $mytoplevel.colors.sections.exp.fr_bk configure -font $current_font_spec
-    $mytoplevel.colors.sections.exp.lb_bk configure -font $current_font_spec
+    $mytoplevel.colors.sections.exp.c itemconfigure label -font $current_font_spec
 }
 
 proc ::dialog_iemgui::apply {mytoplevel} {
@@ -581,46 +569,53 @@ proc ::dialog_iemgui::pdtk_iemgui_dialog {mytoplevel mainheader dim_header_UNUSE
         -expand yes -fill x
     frame $mytoplevel.colors.sections.exp
     pack $mytoplevel.colors.sections.exp -side right -padx 5
-    if { $::dialog_iemgui::var_color_foreground($vid) ne "none" } {
-        label $mytoplevel.colors.sections.exp.fr_bk -text "o=||=o" -width 6 \
-            -background $::dialog_iemgui::var_color_background($vid) \
-            -activebackground $::dialog_iemgui::var_color_background($vid) \
-            -foreground $::dialog_iemgui::var_color_foreground($vid) \
-            -activeforeground $::dialog_iemgui::var_color_foreground($vid) \
-            -font [list $current_font 14 $::font_weight] -padx 2 -pady 2 -relief ridge
-    } else {
-        label $mytoplevel.colors.sections.exp.fr_bk -text "o=||=o" -width 6 \
-            -background $::dialog_iemgui::var_color_background($vid) \
-            -activebackground $::dialog_iemgui::var_color_background($vid) \
-            -foreground $::dialog_iemgui::var_color_background($vid) \
-            -activeforeground $::dialog_iemgui::var_color_background($vid) \
-            -font [list $current_font 14 $::font_weight] -padx 2 -pady 2 -relief ridge
-    }
-    label $mytoplevel.colors.sections.exp.lb_bk -text [_ "Test label"] \
-        -background $::dialog_iemgui::var_color_background($vid) \
-        -activebackground $::dialog_iemgui::var_color_background($vid) \
-        -foreground $::dialog_iemgui::var_color_label($vid) \
-        -activeforeground $::dialog_iemgui::var_color_label($vid) \
-        -font [list $current_font 14 $::font_weight] -padx 2 -pady 2 -relief ridge
-    pack $mytoplevel.colors.sections.exp.lb_bk $mytoplevel.colors.sections.exp.fr_bk \
-        -side right -anchor e -expand yes -fill both -pady 7
 
+    set c $mytoplevel.colors.sections.exp.c
+    canvas $c -relief ridge -width 180 -height 30
+    pack $c -side right
+    set dx 5
+    set dy 5
+    set cwidth [$c cget -width]
+    set cheight [$c cget -height]
+    for {set x 0} {[expr $x < $cwidth]} {incr x $dx} {
+        for {set y 0} {[expr $y < $cheight]} {incr y $dy} {
+            if { [expr ($x+$y)%2] } {
+                set color white
+            } else {
+                set color lightgrey
+            }
+            $c create rectangle $x $y [expr $x + $dx] [expr $y + $dy] \
+                -width 0 -fill $color
+        }
+    }
+    $c create rectangle 5 5 55 25 -tags background -fill $::dialog_iemgui::var_color_background($vid)
+    set color $::dialog_iemgui::var_color_foreground($vid)
+    if { $color ne "none" } {
+        $c create polygon 7 7 53 23 7 23 -tags foreground -fill $::dialog_iemgui::var_color_foreground($vid)
+    }
+    $c create text 30 15 -tags label -anchor w \
+        -font [list $current_font 14 $::font_weight]  -text [_ "Test label" ] \
+        -fill $::dialog_iemgui::var_color_label($vid)
+
+    frame ${mytoplevel}.colors.palette
+    pack  ${mytoplevel}.colors.palette -side top
+    set palette $mytoplevel.colors.palette
     # color scheme by Mary Ann Benedetto http://piR2.org
     foreach r {r1 r2 r3} hexcols {
        { "#FFFFFF" "#DFDFDF" "#BBBBBB" "#FFC7C6" "#FFE3C6" "#FEFFC6" "#C6FFC7" "#C6FEFF" "#C7C6FF" "#E3C6FF" }
        { "#9F9F9F" "#7C7C7C" "#606060" "#FF0400" "#FF8300" "#FAFF00" "#00FF04" "#00FAFF" "#0400FF" "#9C00FF" }
        { "#404040" "#202020" "#000000" "#551312" "#553512" "#535512" "#0F4710" "#0E4345" "#131255" "#2F004D" } } \
     {
-       frame $mytoplevel.colors.$r
-       pack $mytoplevel.colors.$r -side top
+       frame ${palette}.$r
+       pack ${palette}.$r -side top
        foreach i { 0 1 2 3 4 5 6 7 8 9} hexcol $hexcols \
            {
-               label $mytoplevel.colors.$r.c$i -background $hexcol -activebackground $hexcol -relief ridge -padx 7 -pady 0 -width 1
-               bind $mytoplevel.colors.$r.c$i <Button> "::dialog_iemgui::preset_col $mytoplevel $hexcol"
+               label ${palette}.$r.c$i -background $hexcol -activebackground $hexcol -relief ridge -padx 7 -pady 0 -width 1
+               bind ${palette}.$r.c$i <Button> "::dialog_iemgui::preset_col $mytoplevel $hexcol"
            }
-       pack $mytoplevel.colors.$r.c0 $mytoplevel.colors.$r.c1 $mytoplevel.colors.$r.c2 $mytoplevel.colors.$r.c3 \
-           $mytoplevel.colors.$r.c4 $mytoplevel.colors.$r.c5 $mytoplevel.colors.$r.c6 $mytoplevel.colors.$r.c7 \
-           $mytoplevel.colors.$r.c8 $mytoplevel.colors.$r.c9 -side left
+       pack ${palette}.$r.c0 ${palette}.$r.c1 ${palette}.$r.c2 ${palette}.$r.c3 \
+           ${palette}.$r.c4 ${palette}.$r.c5 ${palette}.$r.c6 ${palette}.$r.c7 \
+           ${palette}.$r.c8 ${palette}.$r.c9 -side left
     }
 
     # buttons
