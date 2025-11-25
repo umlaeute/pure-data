@@ -1222,6 +1222,26 @@ void ugen_done_graph(t_dspcontext *dc)
         pd_error(blk, "%s: invalid reblocking from %d to %d detected (canvas was not scheduled)",
                  switched?"switch~":"block~",
                  parent_vecsize, calcsize);
+        for (u = dc->dc_ugenlist; u; u = u->u_next)
+        {
+            t_pd *zz = &u->u_obj->ob_pd;
+            if (pd_class(zz) == voutlet_class)
+            {
+                struct _voutlet *zz_out = (struct _voutlet *)zz;
+                t_signal **outsigs = dc->dc_iosigs;
+                if (outsigs) {
+                    outsigs += dc->dc_ninlets;
+                    voutlet_dspprolog(zz_out,
+                                      outsigs, calcsize,
+                                      THIS->u_phase + offset, period, frequency,
+                                      1, 1, 0, 1);
+                    voutlet_dspepilog(zz_out,
+                                      outsigs, calcsize,
+                                      THIS->u_phase + offset, period, frequency,
+                                      1, 1, 0, 1);
+                }
+            }
+        }
         goto cleanup;
     }
 
