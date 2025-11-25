@@ -1206,6 +1206,25 @@ void ugen_done_graph(t_dspcontext *dc)
         }
     }
 
+        /* JMZ
+           Pd allows for arbitrary block-sizes,
+           but the reblocking fails catastrophically if the parent vectorsize
+           and the child vectorsize do not align (that is: one is not an integer
+           multiple of the other)
+           since we only need to reblock if there are inlet~s or outlet~s,
+           we just unschedule patches with a bad blocksize AND iolet~s.
+         */
+    if (blk
+       && (dc->dc_ninlets || dc->dc_noutlets)
+       && ((parent_vecsize > calcsize)?(parent_vecsize % calcsize):(calcsize % parent_vecsize))
+       )
+    {
+        pd_error(blk, "%s: invalid reblocking from %d to %d detected (canvas was not scheduled)",
+                 switched?"switch~":"block~",
+                 parent_vecsize, calcsize);
+        goto cleanup;
+    }
+
     if (THIS->u_loud)
         post("reblock %d, switched %d", reblock, switched);
 
@@ -1328,6 +1347,7 @@ void ugen_done_graph(t_dspcontext *dc)
         post("... ugen_done_graph done.");
     }
         /* now delete everything. */
+ cleanup:
     while (dc->dc_ugenlist)
     {
         for (uout = dc->dc_ugenlist->u_out, n = dc->dc_ugenlist->u_nout;
