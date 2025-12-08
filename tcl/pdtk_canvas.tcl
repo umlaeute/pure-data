@@ -530,8 +530,6 @@ proc ::pdtk_canvas::cords_to_foreground {mytoplevel {state 1}} {
 proc pdtk_canvas_create_line {canvas dashed width color tag args} {
     if ($dashed) { set dashoption "-dash -"; } else {set dashoption "" }
 
-    puts stderr  [concat $canvas create line $args $dashoption \
-        -width $width -fill $color -capstyle projecting -tags $tag]
     eval [concat $canvas create line $args $dashoption \
         -width $width -fill $color -capstyle projecting -tags $tag]
 }
