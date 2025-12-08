@@ -1011,19 +1011,15 @@ static void canvas_drawlines(t_canvas *x)
     t_outconnect *oc;
     {
         char tag[128];
-        const char*tags[2] = {tag, "cord"};
         linetraverser_start(&t, x);
         while ((oc = linetraverser_next(&t)))
         {
             sprintf(tag, "l%p", oc);
-            pdgui_vmess(0, "crr iiii ri rk rS",
-                glist_getcanvas(x), "create", "line",
-                t.tr_lx1,t.tr_ly1, t.tr_lx2,t.tr_ly2,
-                "-width", (outlet_getsymbol(t.tr_outlet) == &s_signal ? 2:1)
-                    * x->gl_zoom,
-                "-fill", THISGUI->i_foregroundcolor,
-
-                "-tags", 2, tags);
+            pdgui_vmess(0, "rc iikr iiii",
+                "pdtk_canvas_create_line", glist_getcanvas(x),
+                0, (outlet_getsymbol(t.tr_outlet) == &s_signal ? 2:1)
+                    * x->gl_zoom, THISGUI->i_foregroundcolor, tag,
+                t.tr_lx1, t.tr_ly1, t.tr_lx2, t.tr_ly2);
         }
     }
 }
