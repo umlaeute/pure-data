@@ -18,8 +18,6 @@ typedef struct _path
     t_dpoint *p_vec;
     double p_width;
     int p_dashed;
-    char p_tag[80];
-    char p_purpose[8];
 } t_path;
 
 typedef struct _rect
@@ -28,8 +26,6 @@ typedef struct _rect
     double r_y1;
     double r_x2;
     double r_y2;
-    char r_tag[80];
-    char r_purpose[8];
 } t_rect;
 
 typedef struct _text
@@ -39,8 +35,6 @@ typedef struct _text
     double t_fontsize;
     int t_blue;
     char *t_text;
-    char t_tag[80];
-    char t_purpose[8];
 } t_text;
 
 #define I_PATH 1
@@ -50,6 +44,8 @@ typedef struct _text
 typedef struct _item
 {
     int i_type;
+    char i_tag[80];
+    char i_purpose[80]; /* get rid of this if it really isn't needed */
     union
     {
         t_path *i_path;
@@ -70,12 +66,6 @@ struct _canvas
     t_item *c_vec;
     struct _canvas *c_next;
 };
-
-void path_free(t_path *x)
-{
-    free(x->p_vec);
-    free(x);
-}
 
 static void gfx_path_draw(t_path *x, t_canvas *c, cairo_t *cr)
 {
@@ -108,11 +98,17 @@ void gfx_canvas_addpath(t_canvas *x, char *tag, char *purpose, int dashed,
         p->p_vec[i].p_x = coords[2*i], p->p_vec[i].p_y = coords[2*i+1];
     p->p_width = width;
     p->p_dashed = dashed;
-    strncpy(p->p_tag, tag, 80);
-    p->p_tag[79] = 0;
-    strncpy(p->p_purpose, purpose, 8);
-    p->p_purpose[7] = 0;
+    strncpy(it->i_tag, tag, 80);
+    it->i_tag[79] = 0;
+    strncpy(it->i_purpose, purpose, 8);
+    it->i_purpose[7] = 0;
     gtk_widget_queue_draw(x->c_drawing_area);
+}
+
+void path_free(t_path *x)
+{
+    free(x->p_vec);
+    free(x);
 }
 
 void gfx_canvas_coords(t_canvas *x, char *tag, int npoints, double *coords)
@@ -121,7 +117,7 @@ void gfx_canvas_coords(t_canvas *x, char *tag, int npoints, double *coords)
     for (indx = 0; indx < x->c_n; indx++)
     {
         if (x->c_vec[indx].i_type == I_PATH &&
-            !strcmp(tag, x->c_vec[indx].i_w.i_path->p_tag))
+            !strcmp(tag, x->c_vec[indx].i_tag))
         {
             t_path *y = x->c_vec[indx].i_w.i_path;
             y->p_vec = (t_dpoint *)realloc(y->p_vec,
@@ -132,7 +128,7 @@ void gfx_canvas_coords(t_canvas *x, char *tag, int npoints, double *coords)
             return;
         }
         else if (x->c_vec[indx].i_type == I_TEXT &&
-            !strcmp(tag, x->c_vec[indx].i_w.i_text->t_tag))
+            !strcmp(tag, x->c_vec[indx].i_tag))
         {
             x->c_vec[indx].i_w.i_text->t_x = coords[0];
             x->c_vec[indx].i_w.i_text->t_y = coords[1];
@@ -140,7 +136,7 @@ void gfx_canvas_coords(t_canvas *x, char *tag, int npoints, double *coords)
             return;
         }
         else if (x->c_vec[indx].i_type == I_RECT &&
-            !strcmp(tag, x->c_vec[indx].i_w.i_rect->r_tag))
+            !strcmp(tag, x->c_vec[indx].i_tag))
         {
             x->c_vec[indx].i_w.i_rect->r_x1 = coords[0];
             x->c_vec[indx].i_w.i_rect->r_y1 = coords[1];
@@ -151,21 +147,6 @@ void gfx_canvas_coords(t_canvas *x, char *tag, int npoints, double *coords)
         }
     }
     fprintf(stderr, "canvas_coords: unknown tag %s\n", tag);
-}
-
-void gfx_canvas_move(t_canvas *x, char *tag, double dx, double dy)
-{
-    int indx;
-    for (indx = 0; indx < x->c_n; indx++)
-        if (x->c_vec[indx].i_type == I_TEXT &&
-            !strcmp(tag, x->c_vec[indx].i_w.i_text->t_tag))
-    {
-        x->c_vec[indx].i_w.i_text->t_x += dx;
-        x->c_vec[indx].i_w.i_text->t_y += dy;
-        gtk_widget_queue_draw(x->c_drawing_area);
-        return;
-    }
-    fprintf(stderr, "canvas_move: unknown tag %s\n", tag);
 }
 
 static void gfx_text_draw(t_text *x, t_canvas *c, cairo_t *cr)
@@ -220,10 +201,10 @@ void gfx_canvas_addtext(t_canvas *x, char *tag, char *purpose, char *text,
     t->t_y = py;
     t->t_fontsize = fontsize;
     t->t_blue = blue;
-    strncpy(t->t_tag, tag, 80);
-    t->t_tag[79] = 0;
-    strncpy(t->t_purpose, purpose, 8);
-    t->t_purpose[7] = 0;
+    strncpy(it->i_tag, tag, 80);
+    it->i_tag[79] = 0;
+    strncpy(it->i_purpose, purpose, 8);
+    it->i_purpose[7] = 0;
     gtk_widget_queue_draw(x->c_drawing_area);
 }
 
@@ -236,7 +217,7 @@ void gfx_canvas_text_set(t_canvas *x, char *tag, char *text)
     for (i = 0; i < x->c_n; i++)
     {
         if (x->c_vec[i].i_type == I_TEXT &&
-            !strcmp(x->c_vec[i].i_w.i_text->t_tag, tag))
+            !strcmp(x->c_vec[i].i_tag, tag))
         {
             x->c_vec[i].i_w.i_text->t_text =
                 realloc(x->c_vec[i].i_w.i_text->t_text, strlen(text) + 1);
@@ -247,6 +228,12 @@ void gfx_canvas_text_set(t_canvas *x, char *tag, char *text)
     }
     fprintf(stderr, "gfx_canvas_text_set: couldn't find text with tag '%s'\n",
         tag);
+}
+
+void text_free(t_text *x)
+{
+    free(x->t_text);
+    free(x);
 }
 
 void gfx_canvas_addrectangle(t_canvas *x, char *tag, char *purpose,
@@ -265,10 +252,11 @@ void gfx_canvas_addrectangle(t_canvas *x, char *tag, char *purpose,
     r->r_y1 = y1;
     r->r_x2 = x2;
     r->r_y2 = y2;
-    strncpy(r->r_tag, tag, 80);
-    r->r_tag[79] = 0;
-    strncpy(r->r_purpose, purpose, 8);
-    r->r_purpose[7] = 0;
+    strncpy(it->i_tag, tag, 80);
+    it->i_tag[79] = 0;
+    fprintf(stderr, "rect tag %s\n", tag);
+    strncpy(it->i_purpose, purpose, 8);
+    it->i_purpose[7] = 0;
     gtk_widget_queue_draw(x->c_drawing_area);
 }
 
@@ -276,6 +264,54 @@ static void gfx_rect_draw(t_rect *x, t_canvas *c, cairo_t *cr)
 {
   cairo_rectangle (cr, x->r_x1, x->r_y1, x->r_x2 - x->r_x1, x->r_y2 - x->r_y1);
   cairo_fill (cr);
+}
+
+void rect_free(t_rect *x)
+{
+    free(x);
+}
+
+void gfx_canvas_move(t_canvas *x, char *tag, double dx, double dy)
+{
+    int indx;
+    for (indx = 0; indx < x->c_n; indx++)
+        if (x->c_vec[indx].i_type == I_TEXT &&
+            !strcmp(tag, x->c_vec[indx].i_tag))
+    {
+        x->c_vec[indx].i_w.i_text->t_x += dx;
+        x->c_vec[indx].i_w.i_text->t_y += dy;
+        gtk_widget_queue_draw(x->c_drawing_area);
+        return;
+    }
+    fprintf(stderr, "canvas_move: unknown tag %s\n", tag);
+}
+
+void gfx_canvas_delete(t_canvas *x, char *tag)
+{
+    int indx, didone = 0;
+    for (indx = 0; indx < x->c_n; )
+    {
+        if (!strcmp(tag, x->c_vec[indx].i_tag))
+        {
+            if (x->c_vec[indx].i_type == I_PATH)
+                path_free(x->c_vec[indx].i_w.i_path);
+            else if (x->c_vec[indx].i_type == I_TEXT)
+                text_free(x->c_vec[indx].i_w.i_text);
+            else if (x->c_vec[indx].i_type == I_RECT)
+                rect_free(x->c_vec[indx].i_w.i_rect);
+            memmove((char *)(x->c_vec + indx), (char *)(x->c_vec + (indx+1)),
+                (x->c_n - indx - 1) * sizeof(*x->c_vec));
+            x->c_vec = (t_item *)realloc(x->c_vec,
+                (x->c_n-1) * sizeof(*x->c_vec));
+            x->c_n--;
+            didone = 1;
+            gtk_widget_queue_draw(x->c_drawing_area);
+            return;
+        }
+        else indx++;
+    }
+    if (!didone)
+        fprintf(stderr, "canvas_delete: unknown tag %s\n", tag);
 }
 
     /* for debugging: */
@@ -287,8 +323,8 @@ void gfx_canvas_spew(t_canvas *x)
         switch (x->c_vec[i].i_type)
         {
             case I_PATH:
-                fprintf(stderr, "path %s %s:", x->c_vec[i].i_w.i_path->p_tag,
-                    x->c_vec[i].i_w.i_path->p_purpose);
+                fprintf(stderr, "path %s %s:", x->c_vec[i].i_tag,
+                    x->c_vec[i].i_purpose);
                 for (j = 0; j < x->c_vec[i].i_w.i_path->p_n; j++)
                     fprintf(stderr, "%f %f:",
                         x->c_vec[i].i_w.i_path->p_vec[j].p_x,
@@ -296,8 +332,8 @@ void gfx_canvas_spew(t_canvas *x)
                 fprintf(stderr, "\n");
                 break;
             case I_RECT:
-                fprintf(stderr, "rect %s %s:", x->c_vec[i].i_w.i_path->p_tag,
-                    x->c_vec[i].i_w.i_path->p_purpose);
+                fprintf(stderr, "rect %s %s:", x->c_vec[i].i_tag,
+                    x->c_vec[i].i_purpose);
                 break;
             case I_TEXT:
                 fprintf(stderr, "text\n");

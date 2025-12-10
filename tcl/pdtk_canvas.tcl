@@ -527,15 +527,18 @@ proc ::pdtk_canvas::cords_to_foreground {mytoplevel {state 1}} {
 # ------------------- convenience functions ----------------
 
 
-proc pdtk_canvas_create_line {canvas dashed width color tag args} {
+proc pdtk_canvas_create_line {canvas tag dashed width color args} {
     if ($dashed) { set dashoption "-dash -"; } else {set dashoption "" }
 
     eval [concat $canvas create line $args $dashoption \
         -width $width -fill $color -capstyle projecting -tags $tag]
 }
 
-proc pdtk_canvas_create_rect {canvas pattern width color tag x1 y1 x2 y2} {
+proc pdtk_canvas_create_rect {canvas tag color x1 y1 x2 y2} {
     eval [concat $canvas create rectangle $x1 $y1 $x2 $y2 \
-    -dash \"$pattern\" \
-    -width $width -fill $color -capstyle projecting -tags $tag]
+    -fill $color -outline $color -tags $tag]
+}
+
+proc pdtk_canvas_delete {canvas tag} {
+    $canvas delete $tag
 }

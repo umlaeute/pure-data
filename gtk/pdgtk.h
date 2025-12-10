@@ -33,8 +33,11 @@ void gfx_canvas_addrectangle(t_canvas *x, char *tag, char *purpose,
 /* set text */
 void gfx_canvas_text_set(t_canvas *x, char *tag, char *text);
 
-/* move a text */
+/* move an item (text only?) */
 void gfx_canvas_move(t_canvas *x, char *tag, double dx, double dy);
+
+/* delete an item */
+void gfx_canvas_delete(t_canvas *x, char *tag);
 
 /* change coordinates of a path or text */
 void gfx_canvas_coords(t_canvas *x, char *tag, int npoints, double *coords);
