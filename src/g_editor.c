@@ -2549,13 +2549,6 @@ static void canvas_doclick(t_canvas *x, int xpix, int ypix, int mod, int doit)
                             0, x->gl_zoom, THISGUI->i_foregroundcolor,
                             x->gl_editor->e_xwas, x->gl_editor->e_ywas,
                             xpix, ypix);
-                        /* pdgui_vmess(0, "crr iiii ri rk rs",
-                            x, "create", "line",
-                            x->gl_editor->e_xwas,x->gl_editor->e_ywas,
-                            xpix, ypix,
-                            "-width", (issignal ? 2 : 1) * x->gl_zoom,
-                            "-fill", THISGUI->i_foregroundcolor,
-                            "-tags", "x"); */
                     }
                     else canvas_setcursor(x, CURSOR_EDITMODE_CONNECT);
                 }
@@ -2763,7 +2756,6 @@ static int tryconnect(t_canvas*x, t_object *src, int nout,
             int y11=0, y12=0, y21=0, y22=0;
             int noutlets1, ninlets, lx1, ly1, lx2, ly2;
             char tag[128];
-            char*tags[] = {tag, "cord"};
             sprintf(tag, "l%p", oc);
             gobj_getrect(&src->ob_g, x, &x11, &y11, &x12, &y12);
             gobj_getrect(&sink->ob_g, x, &x21, &y21, &x22, &y22);
@@ -2779,12 +2771,11 @@ static int tryconnect(t_canvas*x, t_object *src, int nout,
                              ((x22-x21-iow) * nin)/(ninlets-1) : 0)
                 + iom;
             ly2 = y21;
-            pdgui_vmess(0, "crr iiii ri rk rS",
-                glist_getcanvas(x), "create", "line",
-                lx1,ly1, lx2,ly2,
-                "-width", (obj_issignaloutlet(src, nout) ? 2 : 1) * x->gl_zoom,
-                "-fill", THISGUI->i_foregroundcolor,
-                "-tags", 2, tags);
+            pdgui_vmess(0, "rcr ii k iiii",
+                "pdtk_canvas_create_line", glist_getcanvas(x), tag,
+                0, (obj_issignaloutlet(src, nout) ? 2 : 1) * x->gl_zoom,
+                    THISGUI->i_foregroundcolor,
+                lx1,ly1, lx2,ly2);
             canvas_undo_add(x, UNDO_CONNECT, "connect",
                 canvas_undo_set_connect(x,
                     canvas_getindex(x, &src->ob_g), nout,
@@ -4608,14 +4599,12 @@ void canvas_connect(t_canvas *x, t_floatarg fwhoout, t_floatarg foutno,
     if (glist_isvisible(x) && x->gl_havewindow)
     {
         char tag[128];
-        char*tags[] = {tag, "cord"};
         sprintf(tag, "l%p", oc);
-        pdgui_vmess(0, "crr iiii ri rk rS",
-            glist_getcanvas(x), "create", "line",
-            0, 0, 0, 0,
-            "-width", (obj_issignaloutlet(objsrc, outno) ? 2 : 1) * x->gl_zoom,
-            "-fill", THISGUI->i_foregroundcolor,
-            "-tags", 2, tags);
+        pdgui_vmess(0, "rcr iik iiii",
+            "pdtk_canvas_create_line", glist_getcanvas(x), tag,
+            0, (obj_issignaloutlet(objsrc, outno) ? 2 : 1) * x->gl_zoom,
+                THISGUI->i_foregroundcolor,
+            0, 0, 0, 0);
         canvas_fixlinesfor(x, objsrc);
     }
     return;

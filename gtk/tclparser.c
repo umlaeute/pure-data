@@ -173,12 +173,12 @@ static int cmd_pdtk_canvas_create_line(ClientData cdata, Tcl_Interp *interp,
 }
 
  /* cmd_pdtk_canvas_create_rect
-    <canvas> <tag> <color> x1 y1 x2 y2 */
+    <canvas> <tag> <width> <color> x1 y1 x2 y2 */
 static int cmd_pdtk_canvas_create_rect(ClientData cdata, Tcl_Interp *interp,
     int objc, Tcl_Obj *const objv[])
 {
     Tcl_HashEntry *hash;
-    if (objc != 8)
+    if (objc != 9)
     {
         fprintf(stderr, "pdtk_canvas_create_line: bad #args = %d\n", objc);
         return (TCL_ERROR);
@@ -190,13 +190,14 @@ static int cmd_pdtk_canvas_create_rect(ClientData cdata, Tcl_Interp *interp,
     else
     {
         t_canvas *c = (t_canvas *)Tcl_GetHashValue(hash);
-        double x1, y1, x2, y2;
-        Tcl_GetDouble(interp, Tcl_GetString(objv[4]), &x1);
-        Tcl_GetDouble(interp, Tcl_GetString(objv[5]), &y1);
-        Tcl_GetDouble(interp, Tcl_GetString(objv[6]), &x2);
-        Tcl_GetDouble(interp, Tcl_GetString(objv[7]), &y2);
+        double x1, y1, x2, y2, width;
+        Tcl_GetDouble(interp, Tcl_GetString(objv[5]), &x1);
+        Tcl_GetDouble(interp, Tcl_GetString(objv[6]), &y1);
+        Tcl_GetDouble(interp, Tcl_GetString(objv[7]), &x2);
+        Tcl_GetDouble(interp, Tcl_GetString(objv[8]), &y2);
+        Tcl_GetDouble(interp, Tcl_GetString(objv[3]), &width);
         gfx_canvas_addrectangle(c, Tcl_GetString(objv[2]),
-            Tcl_GetString(objv[3]), x1, y1, x2, y2);
+            "", width, x1, y1, x2, y2);
     }
     return (TCL_OK);
 }

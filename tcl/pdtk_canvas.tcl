@@ -534,9 +534,9 @@ proc pdtk_canvas_create_line {canvas tag dashed width color args} {
         -width $width -fill $color -capstyle projecting -tags $tag]
 }
 
-proc pdtk_canvas_create_rect {canvas tag color x1 y1 x2 y2} {
+proc pdtk_canvas_create_rect {canvas tag width color x1 y1 x2 y2} {
     eval [concat $canvas create rectangle $x1 $y1 $x2 $y2 \
-    -fill $color -outline $color -tags $tag]
+    -width $width -fill $color -outline $color -tags $tag]
 }
 
 proc pdtk_canvas_delete {canvas tag} {

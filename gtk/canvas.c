@@ -237,7 +237,7 @@ void text_free(t_text *x)
 }
 
 void gfx_canvas_addrectangle(t_canvas *x, char *tag, char *purpose,
-    double x1, double y1, double x2, double y2)
+    double width, double x1, double y1, double x2, double y2)
 {
     t_rect *r;
     t_item *it;
@@ -250,11 +250,10 @@ void gfx_canvas_addrectangle(t_canvas *x, char *tag, char *purpose,
     x->c_n++;
     r->r_x1 = x1;
     r->r_y1 = y1;
-    r->r_x2 = x2;
-    r->r_y2 = y2;
+    r->r_x2 = x2+width;
+    r->r_y2 = y2+width;
     strncpy(it->i_tag, tag, 80);
     it->i_tag[79] = 0;
-    fprintf(stderr, "rect tag %s\n", tag);
     strncpy(it->i_purpose, purpose, 8);
     it->i_purpose[7] = 0;
     gtk_widget_queue_draw(x->c_drawing_area);
@@ -305,13 +304,13 @@ void gfx_canvas_delete(t_canvas *x, char *tag)
                 (x->c_n-1) * sizeof(*x->c_vec));
             x->c_n--;
             didone = 1;
-            gtk_widget_queue_draw(x->c_drawing_area);
-            return;
         }
         else indx++;
     }
     if (!didone)
         fprintf(stderr, "canvas_delete: unknown tag %s\n", tag);
+    gtk_widget_queue_draw(x->c_drawing_area);
+    return;
 }
 
     /* for debugging: */

@@ -28,7 +28,7 @@ void gfx_canvas_addtext(t_canvas *x, char *tag, char *purpose, char *text,
 
 /* add a rectangle */
 void gfx_canvas_addrectangle(t_canvas *x, char *tag, char *purpose,
-    double x1, double y1, double x2, double y2);
+    double width, double x1, double y1, double x2, double y2);
 
 /* set text */
 void gfx_canvas_text_set(t_canvas *x, char *tag, char *text);

@@ -1539,8 +1539,8 @@ void glist_drawiofor(t_glist *glist, t_object *ob, int firsttime,
                 "-tags", (int)(sizeof(tags)/sizeof(*tags)), tags,
                 "-fill", THISGUI->i_foregroundcolor,
                 "-outline", THISGUI->i_foregroundcolor); */
-            pdgui_vmess(0, "r crk iiii", "pdtk_canvas_create_rect",
-                glist_getcanvas(glist), tagbuf, THISGUI->i_foregroundcolor,
+            pdgui_vmess(0, "r crik iiii", "pdtk_canvas_create_rect",
+                glist_getcanvas(glist), tagbuf, 1, THISGUI->i_foregroundcolor,
                 onset, y2 - oh + glist->gl_zoom, onset + iow, y2);
         else
             pdgui_vmess(0, "crs iiii",
@@ -1561,8 +1561,8 @@ void glist_drawiofor(t_glist *glist, t_object *ob, int firsttime,
                 "-tags", (int)(sizeof(tags)/sizeof(*tags)), tags,
                 "-fill", THISGUI->i_foregroundcolor,
                 "-outline", THISGUI->i_foregroundcolor); */
-            pdgui_vmess(0, "r crk iiii", "pdtk_canvas_create_rect",
-                glist_getcanvas(glist), tagbuf, THISGUI->i_foregroundcolor,
+            pdgui_vmess(0, "r crik iiii", "pdtk_canvas_create_rect",
+                glist_getcanvas(glist), tagbuf, 1, THISGUI->i_foregroundcolor,
                 onset, y1, onset + iow, y1 + ih - glist->gl_zoom);
         else
             pdgui_vmess(0, "crs iiii",

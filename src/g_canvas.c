@@ -821,13 +821,10 @@ void canvas_drawredrect(t_canvas *x, int doit)
             x2 = x1 + x->gl_zoom * x->gl_pixwidth,
             y1 = x->gl_zoom * x->gl_ymargin,
             y2 = y1 + x->gl_zoom * x->gl_pixheight;
-        pdgui_vmess(0, "crr iiiiiiiiii rk ri rr rr",
-            glist_getcanvas(x), "create", "line",
-            x1,y1, x1,y2, x2,y2, x2,y1, x1,y1,
-            "-fill", THISGUI->i_gopcolor,
-            "-width", x->gl_zoom,
-            "-capstyle", "projecting",
-            "-tags", "GOP"); /* better: "-tags", 1, &"GOP" */
+        pdgui_vmess(0, "rcr iik iiiiiiiiii",
+            "pdtk_canvas_create_line", glist_getcanvas(x), "GOP",
+            0, x->gl_zoom, THISGUI->i_gopcolor,
+            x1,y1, x1,y2, x2,y2, x2,y1, x1,y1);
     }
     else
         pdgui_vmess(0, "crs", glist_getcanvas(x), "delete", "GOP");
