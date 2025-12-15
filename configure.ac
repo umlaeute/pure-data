@@ -639,10 +639,12 @@ AC_ARG_ENABLE([fftw],
     [AS_HELP_STRING([--enable-fftw], [use FFTW package])],
     [fftw=$enableval], [fftw=no])
 AS_IF([test x$fftw = xyes],[
+    PKG_CHECK_MODULES([FFTW], [fftw3f],[],[
     AC_CHECK_LIB([fftw3f], [fftwf_execute],
-        [LIBS="$LIBS -lfftw3f"],
+        [FFTW_LIBS="-lfftw3f"],
         [AC_MSG_WARN([FFTW development files not found... using built-in FFT])
         fftw=no])
+    ])
 ])
 AM_CONDITIONAL(FFTW, test x$fftw = xyes)
 
