@@ -656,6 +656,21 @@ AS_IF([test "x${WISH}" = "xyes" -o "x${WISH}" = "xno"],
     WISH=""])
 AC_SUBST([WISH])
 
+##### GTK ####
+AC_ARG_WITH([gtk],
+    [AS_HELP_STRING([--with-gtk], [build the GTK4 interface])],
+    [gtk=$withval], [gtk=no])
+AS_IF([test "$gtk" = yes],[
+  PKG_CHECK_MODULES([GTK], [gtk4], [], [gtk = no])
+])
+AS_IF([test "$gtk" = yes],[
+  PKG_CHECK_MODULES([TCL], [tcl], [], [
+    AC_MSG_WARN([The GTK4 requires Tcl-headers to be installed])
+    gtk = no
+  ])
+])
+AM_CONDITIONAL(GTK, test x$gtk = xyes)
+
 ##### Deken OS and CPU #####
 AC_ARG_WITH([deken-os],
     [AS_HELP_STRING([--with-deken-os=<OS>],
@@ -804,6 +819,7 @@ AC_CONFIG_FILES([Makefile
                 portmidi/Makefile
                 tcl/Makefile
                 tcl/pd-gui
+                gtk/GNUmakefile
                 po/Makefile
                 src/Makefile
                 extra/Makefile
@@ -850,6 +866,7 @@ AC_MSG_NOTICE([
 
     fftw:                 ${fftw}
     wish(tcl/tk):         ${wish}
+    gtk:                  ${gtk}
     watchdog:             ${enable_watchdog}
     audio APIs:           ${audio_backends}
     midi APIs:            ${midi_backends}
