@@ -1,13 +1,22 @@
 OBJ = pdgtk.o tclparser.o canvas.o net.o
 
-pdgtk: $(OBJ); gcc -g -o pdgtk $$(pkg-config --cflags gtk4) \
-    $(OBJ) $$(pkg-config --libs gtk4) -ltcl
+PKG_CONFIG ?= pkg-config
+gtk.cflags := $(shell $(PKG_CONFIG) --cflags gtk4)
+gtk.libs := $(shell $(PKG_CONFIG) --libs gtk4)
+tcl.cflags := $(shell $(PKG_CONFIG) --cflags tcl)
+tcl.libs := $(shell $(PKG_CONFIG) --libs tcl)
 
-tclparser.o: tclparser.c; gcc -g -c $<
-net.o: net.c; gcc -g -c $<
-pdgtk.o: pdgtk.c; gcc -g -c $$(pkg-config --cflags gtk4) $<
-canvas.o: canvas.c; gcc -g -c $$(pkg-config --cflags gtk4) $<
+CFLAGS = -g
+CFLAGS += $(gtk.cflags) $(tcl.cflags)
+
+LIBS = -lc
+LIBS += $(gtk.libs) $(tcl.libs)
+
+pdgtk: $(OBJ)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 $(OBJ): pdgtk.h
 
-clean: ; rm -f pdgtk *.o
+.PHONY: clean
+clean:
+	rm -f pdgtk $(OBJ)
