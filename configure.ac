@@ -750,8 +750,8 @@ AS_IF([test "x$audio_backends" = "x"],[
 # we need the dummy MIDI backend, if there is no other backend providing the
 # standard MIDI-functions (OSS and PortMidi provide them; ALSA not)
 needs_midi_dummy="yes"
-AS_IF([echo "${midi_backends}" | grep -wi OSS >/dev/null],[needs_midi_dummy="no"])
-AS_IF([echo "${midi_backends}" | grep -wi PortMidi >/dev/null],[needs_midi_dummy="no"])
+AS_IF([echo "${midi_backends}" | grep -i "\<OSS\>" >/dev/null],[needs_midi_dummy="no"])
+AS_IF([echo "${midi_backends}" | grep -i "\<PortMidi\>" >/dev/null],[needs_midi_dummy="no"])
 
 AM_CONDITIONAL(MIDI_DUMMY, test "x${needs_midi_dummy}" = "xyes")
 AS_IF([test "x$midi_backends" = "x"],[
