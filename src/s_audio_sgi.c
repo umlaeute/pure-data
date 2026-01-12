@@ -3,8 +3,6 @@
 
 /* written by Olaf Matthes <olaf.matthes@gmx.de> */
 
-#ifdef USEAPI_SGI
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,7 +10,6 @@
 #include <s_stuff.h>
 
 #include <dmedia/audio.h>
-#include <dmedia/midi.h>
 #include <sys/fpu.h>
 #include <errno.h>
 
@@ -456,5 +453,3 @@ void sgi_listaudiodevs(void)
     post("#2  - AES In/Out");
     post("#3  - ADAT I/O");
 }
-
-#endif /* SGI */

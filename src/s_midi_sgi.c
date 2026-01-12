@@ -14,7 +14,6 @@
 #include <sys/types.h>
 #include <sys/time.h>
 
-#include <dmedia/audio.h>
 #include <sys/fpu.h>
 #include <dmedia/midi.h>
 int mdInit(void);               /* prototype was messed up in midi.h */
