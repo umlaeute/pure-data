@@ -121,7 +121,7 @@ int sgi_open_audio(int nindev,  int *indev,  int nchin,  int *chin,
         }
         if (!in_dev)
         {
-            error("%s\n", sgi_get_error_message(in_dev));
+            pd_error(0, "%s\n", sgi_get_error_message(in_dev));
             continue;       /* try next device, if any */
         }
 
@@ -179,7 +179,7 @@ int sgi_open_audio(int nindev,  int *indev,  int nchin,  int *chin,
         }
         if (!out_dev)
         {
-            error("%s\n", sgi_get_error_message(out_dev));
+            pd_error(0, "%s\n", sgi_get_error_message(out_dev));
             continue;       /* try next device, if any */
         }
 
@@ -240,7 +240,7 @@ void sgi_close_audio(void)
         {
             err = alClosePort(sgi_iport[n]);
             if (err < 0)
-                error("closing input %d: %s (%d)", n + 1,
+                pd_error(0, "closing input %d: %s (%d)", n + 1,
                       alGetErrorString(oserror()), err);
         }
     }
@@ -250,7 +250,7 @@ void sgi_close_audio(void)
         {
             err = alClosePort(sgi_oport[n]);
             if (err < 0)
-                error("closing output %d: %s (%d)", n + 1,
+                pd_error(0, "closing output %d: %s (%d)", n + 1,
                       alGetErrorString(oserror()), err);
         }
     }

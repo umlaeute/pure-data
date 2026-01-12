@@ -68,7 +68,7 @@ void sgi_open_midi(int midiin, int midiout)
         for (i = 0; i < sgi_nports; i++)
         {
             if (!(sgi_inport[i] = mdOpenInPort(mdGetName(i))))
-                error("MIDI input port %d: open failed", i+1);;
+                pd_error(0, "MIDI input port %d: open failed", i+1);;
         }
     }
     if (midiout)
@@ -76,7 +76,7 @@ void sgi_open_midi(int midiin, int midiout)
         for (i = 0; i < sgi_nports; i++)
         {
             if (!(sgi_outport[i] = mdOpenOutPort(mdGetName(i))))
-                error("MIDI output port %d: open failed", i+1);;
+                pd_error(0, "MIDI output port %d: open failed", i+1);;
         }
     }
     return;
@@ -94,13 +94,13 @@ void sys_putmidimess(int portno, int a, int b, int c)
     mdv.stamp = 0;
     mdv.msglen = 0;
     if (mdSend(sgi_outport[portno], &mdv, 1) < 0)
-        error("MIDI output error\n");
+        pd_error(0, "MIDI output error\n");
     post("msg out %d %d %d", a, b, c);
 }
 
 void sys_putmidibyte(int portno, int foo)
 {
-    error("MIDI raw byte output not available on SGI");
+    pd_error(0, "MIDI raw byte output not available on SGI");
 }
 
 void inmidi_noteon(int portno, int channel, int pitch, int velo);
@@ -131,7 +131,7 @@ void sys_poll_midi(void)
         if (FD_ISSET(mdGetFd(*mp),&inports))
         {
             if (mdReceive(*mp, &mdv, 1) < 0)
-                error("failure receiving message\n");
+                pd_error(0, "failure receiving message\n");
             else if (mdv.msg[0] == MD_SYSEX) mdFree(mdv.sysexmsg);
 
             else
