@@ -97,6 +97,8 @@ int sgi_open_audio(int nindev,  int *indev,  int nchin,  int *chin,
     int err, n, gotchannels;
     char *indevnames[4] = {"DefaultIn", "AnalogIn", "AESIn", "ADATIn"};
     char *outdevnames[4] = {"DefaultOut", "AnalogOut", "AESOut", "ADATOut"};
+        /* sys_advance_samples = (sys_schedadvance * sys_dacsr) / (1000000.); */
+    int advance_samples = (sys_schedadvance * STUFF->st_dacsr) / (1000000.);
 
     sgi_flush_all_underflows_to_zero();
 
@@ -129,7 +131,7 @@ int sgi_open_audio(int nindev,  int *indev,  int nchin,  int *chin,
         alSetSampFmt(sgi_inconfig, AL_SAMPFMT_FLOAT);
         alSetFloatMax(sgi_outconfig, 1.1f);
         alSetChannels(sgi_outconfig, chin[n]);
-        alSetQueueSize(sgi_inconfig, sys_advance_samples * chin[n]);
+        alSetQueueSize(sgi_inconfig, advance_samples * chin[n]);
         alSetDevice(sgi_inconfig, in_dev);
         sgi_iport[n] = alOpenPort("Pd input port", "r", sgi_inconfig);
         if (!sgi_iport[n])
@@ -188,7 +190,7 @@ int sgi_open_audio(int nindev,  int *indev,  int nchin,  int *chin,
         alSetSampFmt(sgi_outconfig, AL_SAMPFMT_FLOAT);
         alSetFloatMax(sgi_outconfig, 1.1f);
         alSetChannels(sgi_outconfig, chout[n]);
-        alSetQueueSize(sgi_outconfig, sys_advance_samples * chout[n]);
+        alSetQueueSize(sgi_outconfig, advance_samples * chout[n]);
         alSetDevice(sgi_outconfig, out_dev);
 
             /* open the port */
@@ -275,10 +277,10 @@ int sgi_send_dacs(void)
     static int callno = 0;
     static double timenow;
     double timelast;
-    int inchannels = (sys_inchannels > sgi_inchannels ?
-                      sgi_inchannels : sys_inchannels);
-    int outchannels = (sys_outchannels > sgi_outchannels ?
-                       sgi_outchannels : sys_outchannels);
+    int inchannels = (STUFF->st_inchannels > sgi_inchannels ?
+                      sgi_inchannels : STUFF->st_inchannels);
+    int outchannels = (STUFF->st_outchannels > sgi_outchannels ?
+                       sgi_outchannels : STUFF->st_outchannels);
     long outfill[SGI_MAXDEV], infill[SGI_MAXDEV];
     int outdevchannels, indevchannels;
     int i, n, channel;
@@ -324,7 +326,7 @@ int sgi_send_dacs(void)
         /* output audio data, if we use audio out */
     if (sgi_noutdevs)
     {
-        fp2 = sys_soundout;             /* point to current output position in buffer */
+        fp2 = STUFF->st_soundout;             /* point to current output position in buffer */
         for(n = 0; n < sgi_noutdevs; n++)
         {
             outdevchannels = sgi_noutchans[n];      /* channels supported by this device */
@@ -341,7 +343,7 @@ int sgi_send_dacs(void)
     }
 
         /* zero out the output buffer */
-    memset(sys_soundout, 0, DEFDACBLKSIZE * sizeof(*sys_soundout) * sys_outchannels);
+    memset(STUFF->st_soundout, 0, DEFDACBLKSIZE * sizeof(*STUFF->st_soundout) * STUFF->st_outchannels);
     if (sys_getrealtime() - timenow > 0.002)
     {
 #ifdef DEBUG_SGI_XFER
@@ -355,7 +357,7 @@ int sgi_send_dacs(void)
         /* get audio data from input, if we use audio in */
     if (sgi_nindevs)
     {
-        fp2 = sys_soundin;              /* point to current input position in buffer */
+        fp2 = STUFF->st_soundin;              /* point to current input position in buffer */
         for (n = 0; n < sgi_nindevs; n++)
         {
             indevchannels = sgi_ninchans[n];        /* channels supported by this device */
@@ -368,7 +370,7 @@ int sgi_send_dacs(void)
             {
                     // if (sys_verbose) post("extra ADC buf");
                     /* set buffer to silence */
-                memset(buf, 0, intransfersize * sizeof(*sys_soundout) * sgi_ninchans[n]);
+                memset(buf, 0, intransfersize * sizeof(*STUFF->st_soundout) * sgi_ninchans[n]);
             }
             for (channel = 0, fp1 = buf;
                  channel < indevchannels; channel++, fp1++, fp2 += DEFDACBLKSIZE)
