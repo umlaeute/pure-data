@@ -434,7 +434,7 @@ void sys_do_reopen_audio(void)
     else
 #endif
 #ifdef USEAPI_ESD
-    if (as.a_api == API_ALSA)
+    if (as.a_api == API_ESD)
         outcome = esd_open_audio(as.a_nindev, as.a_indevvec,
             as.a_nindev, as.a_chindevvec, as.a_noutdev,
                 as.a_outdevvec, as.a_noutdev, as.a_choutdevvec, as.a_srate);
