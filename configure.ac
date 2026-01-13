@@ -301,6 +301,7 @@ AC_CHECK_FUNCS([dup2 \
                 sqrt \
                 strchr \
                 strerror \
+                strnlen \
                 strrchr \
                 strstr \
                 strtol
