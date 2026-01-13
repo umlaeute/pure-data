@@ -358,6 +358,8 @@ AC_CHECK_LIBM
 ## CHECK whether this can be replaced by AX_PTHREAD
 AC_SEARCH_LIBS([pthread_create], [pthread pthreadGC2 pthreadGC1 pthreadGC], [],
                AC_MSG_WARN([pthreads required]))
+AC_SEARCH_LIBS([pthread_join], [pthread pthreadGC2 pthreadGC1 pthreadGC], [],
+               AC_MSG_WARN([pthreads required]))
 
 # Illumos needs to link against libsocket for 'sendto' and friends
 AC_SEARCH_LIBS([sendto], [socket])
