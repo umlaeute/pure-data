@@ -447,6 +447,8 @@ EXTERN char*pdgui_strnescape(char* dst, size_t dstlen, const char*src, size_t sr
 EXTERN int pd_snprintf(char *buf, size_t size, const char *fmt, ...);
 EXTERN int pd_vsnprintf(char *buf, size_t size, const char *fmt,
     va_list argptr);
+/* fallback for old system's that don't have strnlen() */
+EXTERN size_t pd_strnlen(const char*s, size_t maxlen);
 
 EXTERN const char *pd_extraflags;     /* a place to stick an extra startup arg */
  /* this is used by 'stdout' but could be useful elsewhere perhaps. */
