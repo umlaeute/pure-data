@@ -169,6 +169,8 @@ void sys_poll_midi(void)
     }
 }
 
+void sys_reinit_midi( void) {}
+
 void sys_do_open_midi(int nmidiin, int *midiinvec,
                       int nmidiout, int *midioutvec)
 {
