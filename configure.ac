@@ -193,6 +193,9 @@ AS_CASE([$host],
 ],[*bsd*],[
     BSD=yes
     EXTERNAL_EXTENSION=so
+],[*-sgi-irix*],[
+    IRIX=yes
+    EXTERNAL_EXTENSION=so
 ],[
     platform=Unknown
     EXTERNAL_EXTENSION=so
@@ -221,6 +224,9 @@ AM_CONDITIONAL(WINDOWS, test x$WINDOWS = xyes)
 AM_CONDITIONAL(CYGWIN, test x$CYGWIN = xyes)
 AM_CONDITIONAL(MINGW, test x$MINGW = xyes)
 AM_CONDITIONAL(BSD, test x$BSD = xyes)
+AM_CONDITIONAL(IRIX, test x$IRIX = xyes)
+
+
 
 #########################################
 ##### Check for programs, libs, & headers #####
@@ -391,6 +397,7 @@ AC_SUBST([OSS_LIBS])
 AC_SUBST([ALSA_LIBS])
 AC_SUBST([JACK_CFLAGS])
 AC_SUBST([JACK_LIBS])
+AC_SUBST([SGI_LIBS])
 
 # Whether to strip symbol from binaries (msw_strip="") or not (msw_strip="-n") on windows. Used in msw/Makefile
 AC_SUBST([msw_strip])
@@ -653,6 +660,19 @@ AS_IF([test x$portmidi = xyes],[
     ])
 ],[local_portmidi=no])
 
+##### SGI #####
+AC_ARG_ENABLE([sgi],
+    [AS_HELP_STRING([--disable-sgi], [do not use SGI audio driver])],
+    [sgi=$enableval], [sgi=yes])
+AS_IF([test x$sgi = xyes],[
+    AC_CHECK_HEADERS([dmedia/audio.h], [
+        AC_CHECK_LIB([audio], [alNewConfig], [SGI_LIBS="-laudio ${SGI_LIBS}"], [sgi=no])
+    ], [sgi=no])
+    AC_CHECK_HEADERS([dmedia/midi.h], [
+        AC_CHECK_LIB([md], [mdInit], [SGI_LIBS="-lmd ${SGI_LIBS}"], [sgi=no])
+    ], [sgi=no])
+])
+
 ##### fftw v3 #####
 AC_ARG_ENABLE([fftw],
     [AS_HELP_STRING([--enable-fftw], [use FFTW package])],
@@ -768,6 +788,13 @@ AM_CONDITIONAL(PORTMIDI, test x$portmidi = xyes)
 AM_CONDITIONAL(LOCAL_PORTMIDI, test x$local_portmidi = xyes)
 AS_IF([test x$portmidi = xyes], [midi_backends="PortMidi ${midi_backends}"])
 
+##### SGI #####
+AM_CONDITIONAL(SGI, test "x$sgi" = "xyes")
+AS_IF([test x$sgi = xyes], [audio_backends="SGI ${audio_backends}"])
+AM_CONDITIONAL(SGI, test "x$sgi" = "xyes")
+AS_IF([test "x$sgi" = "xyes"], [midi_backends="SGI ${midi_backends}"])
+
+
 ##### DUMMY #####
 # warn if we end up trying to build without an audio or midi api
 AM_CONDITIONAL(AUDIO_DUMMY, test "x$audio_backends" = "x")
@@ -780,6 +807,7 @@ AS_IF([test "x$audio_backends" = "x"],[
 needs_midi_dummy="yes"
 AS_IF([echo "${midi_backends}" | grep -i "\<OSS\>" >/dev/null],[needs_midi_dummy="no"])
 AS_IF([echo "${midi_backends}" | grep -i "\<PortMidi\>" >/dev/null],[needs_midi_dummy="no"])
+AS_IF([echo "${midi_backends}" | grep -i "\<SGI\>" >/dev/null],[needs_midi_dummy="no"])
 
 AM_CONDITIONAL(MIDI_DUMMY, test "x${needs_midi_dummy}" = "xyes")
 AS_IF([test "x$midi_backends" = "x"],[
