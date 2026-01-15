@@ -362,7 +362,7 @@ static int wave_writeheader(t_soundfile *sf, size_t nframes)
     t_head head = {"RIFF", 0, "WAVE"};
     t_formatchunk format = {
         "fmt ", swap4(16, swap),
-        WAVE_FORMAT_PCM,                                  /* format tag      */
+        swap2(WAVE_FORMAT_PCM, swap),                     /* format tag      */
         swap2((uint16_t)sf->sf_nchannels, swap),          /* channels        */
         swap4((uint32_t)sf->sf_samplerate, swap),         /* sample rate     */
         swap4((uint32_t)(sf->sf_samplerate *              /* bytes per sec   */
