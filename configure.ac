@@ -308,7 +308,7 @@ AC_CHECK_FUNCS([dup2 \
 
 dnl qsort_r: do we have it, and if so, which variant?
 AC_CHECK_FUNCS_ONCE([qsort_r], [], [AC_DEFINE([STUPID_SORT], 1)])
-if test $ac_cv_func_qsort_r = yes; then
+AS_IF([test "${ac_cv_func_qsort_r}" = yes],[
   AC_CACHE_CHECK([for qsort_r signature], [ac_cv_libctf_qsort_r_signature],
     [AC_LINK_IFELSE(
        [AC_LANG_PROGRAM([[#undef qsort_r
@@ -336,15 +336,14 @@ if test $ac_cv_func_qsort_r = yes; then
                            ]])],
           [ac_cv_libctf_qsort_r_signature=BSD],
           [ac_cv_libctf_qsort_r_signature=unknown])])])
-fi
+])
 
-case x$ac_cv_libctf_qsort_r_signature in
-  xGNU)     AC_DEFINE([HAVE_QSORT_R_ARG_LAST], 1,
-	     [Whether a qsort_r exists with a void *arg as its last arg.]);;
-  xBSD)     AC_DEFINE([HAVE_QSORT_R_COMPAR_LAST], 1,
-	     [Whether a qsort_r exists with the compar function as its last arg.]);;
-  *)        AC_DEFINE([STUPID_SORT], 1);;
-esac
+AS_CASE([${ac_cv_libctf_qsort_r_signature}],
+  [GNU], [AC_DEFINE([HAVE_QSORT_R_ARG_LAST], 1, [Whether a qsort_r exists with a void *arg as its last arg.])],
+  [BSD], [AC_DEFINE([HAVE_QSORT_R_COMPAR_LAST], 1, [Whether a qsort_r exists with the compar function as its last arg.])],
+  [
+      AC_DEFINE([STUPID_SORT], 1)
+  ])
 
 # Checks for libraries.
 have_dl=yes
