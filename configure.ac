@@ -665,6 +665,15 @@ AS_IF([test x$fftw = xyes],[
 ])
 AM_CONDITIONAL(FFTW, test x$fftw = xyes)
 
+
+###### IPv6 #####
+AC_MSG_CHECKING([whether to enable IPv6])
+AC_ARG_ENABLE([ipv6],
+    [AS_HELP_STRING([--disable-ipv6], [(don't) use IPv6])],
+    [enable_ipv6=$enableval], [enable_ipv6=yes])
+AS_IF([test "${enable_ipv6}" = no], AC_DEFINE([DISABLE_IPV6], 1, [Disable IPv6 networking]))
+AC_MSG_RESULT([${enable_ipv6}])
+
 ##### Wish #####
 AC_ARG_WITH([wish],
     [AS_HELP_STRING([--with-wish=WISH],
