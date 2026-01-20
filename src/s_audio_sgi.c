@@ -129,8 +129,8 @@ int sgi_open_audio(int nindev,  int *indev,  int nchin,  int *chin,
 
         sgi_inconfig = alNewConfig();
         alSetSampFmt(sgi_inconfig, AL_SAMPFMT_FLOAT);
-        alSetFloatMax(sgi_outconfig, 1.1f);
-        alSetChannels(sgi_outconfig, chin[n]);
+        alSetFloatMax(sgi_inconfig, 1.1f);
+        alSetChannels(sgi_inconfig, chin[n]);
         alSetQueueSize(sgi_inconfig, advance_samples * chin[n]);
         alSetDevice(sgi_inconfig, in_dev);
         sgi_iport[n] = alOpenPort("Pd input port", "r", sgi_inconfig);
