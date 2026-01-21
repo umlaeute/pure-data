@@ -1681,7 +1681,6 @@ void text_drawborder(t_text *x, t_glist *glist,
         locked we erase them all via the annoying "commentbar" tag. */
     else if (x->te_type == T_TEXT && glist->gl_edit)
     {
-        char *tags[] = {tagR, "commentbar"};
         if (firsttime)
             pdgui_vmess(0, "rcr iik iiii",
                 "pdtk_canvas_create_line", glist_getcanvas(glist), tagR,

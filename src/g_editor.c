@@ -5012,6 +5012,8 @@ void canvas_editmode(t_canvas *x, t_floatarg state)
         t_gobj *g;
         t_object *ob;
         canvas_setcursor(x, CURSOR_EDITMODE_NOTHING);
+            /* comments only get their 'border' (really just a bar for
+            resizing) if we're in edit mode so draw the borders here */
         for (g = x->gl_list; g; g = g->g_next)
             if ((ob = pd_checkobject(&g->g_pd)) && ob->te_type == T_TEXT)
         {
@@ -5026,8 +5028,20 @@ void canvas_editmode(t_canvas *x, t_floatarg state)
         x->gl_edit = (unsigned int) state;
         if (glist_isvisible(x) && glist_istoplevel(x))
         {
+            t_gobj *g;
+            t_object *ob;
+            t_rtext *y;
+                /* erase 'borders' on comment boxes; see above */
+            for (g = x->gl_list; g; g = g->g_next)
+                if ((ob = pd_checkobject(&g->g_pd)) && ob->te_type == T_TEXT
+                    && (y = glist_getrtext(x, ob, 0)))
+            {
+                char tagR[128];
+                sprintf(tagR, "%sR", rtext_gettag(y));
+                pdgui_vmess(0, "rcr",
+                    "pdtk_canvas_delete", glist_getcanvas(x), tagR);
+            }
             canvas_setcursor(x, CURSOR_RUNMODE_NOTHING);
-            pdgui_vmess(0, "rcr", "pdtk_canvas_delete", x, "commentbar");
         }
     }
     if (glist_isvisible(x) && x->gl_havewindow)
