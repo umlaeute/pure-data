@@ -358,6 +358,9 @@ endif
 ##### FFTW fft library #####
 if FFTW
 pd_SOURCES_core += d_fft_fftw.c
+pd_CFLAGS += $(FFTW_CFLAGS)
+pd_LDADD_core += $(FFTW_LIBS)
+libpd_la_LIBADD += $(FFTW_LIBS)
 else
 pd_SOURCES_core += d_fft_fftsg.c
 endif

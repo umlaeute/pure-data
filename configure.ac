@@ -404,6 +404,8 @@ AS_IF([test "x$macos_version_min" != "x"],[
 #########################################
 ##### Configure Options #####
 
+PKG_PROG_PKG_CONFIG
+
 
 ##### realtime watchdog #####
 AC_ARG_ENABLE([watchdog],
@@ -541,12 +543,10 @@ AC_ARG_ENABLE([jack],
     [AS_HELP_STRING([--enable-jack], [use JACK audio server])],
     [jack=$enableval], [jack=no])
 AS_IF([test x$jack_framework != xyes -a x$jack = xyes],[
-    AS_IF([pkg-config --exists jack],[
+    PKG_CHECK_MODULES([JACK], [jack],[
         AC_MSG_NOTICE([Using JACK as specified by pkg-config])
-        JACK_CFLAGS=$(pkg-config --cflags jack)
-        JACK_LIBS=$(pkg-config --libs jack)
         jack=yes
-        ],[
+    ],[
         AC_CHECK_LIB([rt], [shm_open], [LIBS="$LIBS -lrt"])
         AC_CHECK_LIB([jack], [jack_set_xrun_callback], [JACK_LIBS="-ljack" ; jack=xrun])
         AC_CHECK_LIB([jack], [jack_set_error_function], [JACK_LIBS="-ljack" ; jack=yes],
@@ -639,10 +639,12 @@ AC_ARG_ENABLE([fftw],
     [AS_HELP_STRING([--enable-fftw], [use FFTW package])],
     [fftw=$enableval], [fftw=no])
 AS_IF([test x$fftw = xyes],[
+    PKG_CHECK_MODULES([FFTW], [fftw3f],[],[
     AC_CHECK_LIB([fftw3f], [fftwf_execute],
-        [LIBS="$LIBS -lfftw3f"],
+        [FFTW_LIBS="-lfftw3f"],
         [AC_MSG_WARN([FFTW development files not found... using built-in FFT])
         fftw=no])
+    ])
 ])
 AM_CONDITIONAL(FFTW, test x$fftw = xyes)
 
