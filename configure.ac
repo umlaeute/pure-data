@@ -193,6 +193,9 @@ AS_CASE([$host],
 ],[*bsd*],[
     BSD=yes
     EXTERNAL_EXTENSION=so
+],[*-sgi-irix*],[
+    IRIX=yes
+    EXTERNAL_EXTENSION=so
 ],[
     platform=Unknown
     EXTERNAL_EXTENSION=so
@@ -221,6 +224,9 @@ AM_CONDITIONAL(WINDOWS, test x$WINDOWS = xyes)
 AM_CONDITIONAL(CYGWIN, test x$CYGWIN = xyes)
 AM_CONDITIONAL(MINGW, test x$MINGW = xyes)
 AM_CONDITIONAL(BSD, test x$BSD = xyes)
+AM_CONDITIONAL(IRIX, test x$IRIX = xyes)
+
+
 
 #########################################
 ##### Check for programs, libs, & headers #####
@@ -301,6 +307,7 @@ AC_CHECK_FUNCS([dup2 \
                 sqrt \
                 strchr \
                 strerror \
+                strnlen \
                 strrchr \
                 strstr \
                 strtol
@@ -308,7 +315,7 @@ AC_CHECK_FUNCS([dup2 \
 
 dnl qsort_r: do we have it, and if so, which variant?
 AC_CHECK_FUNCS_ONCE([qsort_r], [], [AC_DEFINE([STUPID_SORT], 1)])
-if test $ac_cv_func_qsort_r = yes; then
+AS_IF([test "${ac_cv_func_qsort_r}" = yes],[
   AC_CACHE_CHECK([for qsort_r signature], [ac_cv_libctf_qsort_r_signature],
     [AC_LINK_IFELSE(
        [AC_LANG_PROGRAM([[#undef qsort_r
@@ -336,15 +343,31 @@ if test $ac_cv_func_qsort_r = yes; then
                            ]])],
           [ac_cv_libctf_qsort_r_signature=BSD],
           [ac_cv_libctf_qsort_r_signature=unknown])])])
-fi
+])
 
-case x$ac_cv_libctf_qsort_r_signature in
-  xGNU)     AC_DEFINE([HAVE_QSORT_R_ARG_LAST], 1,
-	     [Whether a qsort_r exists with a void *arg as its last arg.]);;
-  xBSD)     AC_DEFINE([HAVE_QSORT_R_COMPAR_LAST], 1,
-	     [Whether a qsort_r exists with the compar function as its last arg.]);;
-  *)        AC_DEFINE([STUPID_SORT], 1);;
-esac
+AS_CASE([${ac_cv_libctf_qsort_r_signature}],
+  [GNU], [AC_DEFINE([HAVE_QSORT_R_ARG_LAST], 1, [Whether a qsort_r exists with a void *arg as its last arg.])],
+  [BSD], [AC_DEFINE([HAVE_QSORT_R_COMPAR_LAST], 1, [Whether a qsort_r exists with the compar function as its last arg.])],
+  [
+      AC_DEFINE([STUPID_SORT], 1)
+  ])
+
+# sometimes isnan()/isinf()/isifinite() just don't work
+AC_CACHE_CHECK([whether isnan() is usable], tcl_cv_isnan, [
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <math.h>]], [[
+isnan(0.0);                     /* Generates an error if isnan is missing */
+]])],[tcl_cv_isnan=yes],[tcl_cv_isnan=no])])
+AS_IF([test "${tcl_cv_isnan}" = no], AC_DEFINE([NO_ISNAN], 1, [Do we have no usable 'isnan'?]))
+AC_CACHE_CHECK([whether isinf() is usable], tcl_cv_isinf, [
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <math.h>]], [[
+isinf(0.0);                     /* Generates an error if isinf is missing */
+]])],[tcl_cv_isinf=yes],[tcl_cv_isinf=no])])
+AS_IF([test "${tcl_cv_isinf}" = no], AC_DEFINE([NO_ISINF], 1, [Do we have no usable 'isinf'?]))
+AC_CACHE_CHECK([whether isfinite() is usable], tcl_cv_isfinite, [
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <math.h>]], [[
+isfinite(0.0);                     /* Generates an error if isfinite is missing */
+]])],[tcl_cv_isfinite=yes],[tcl_cv_isfinite=no])])
+AS_IF([test "${tcl_cv_isfinite}" = no], AC_DEFINE([NO_ISFINITE], 1, [Do we have no usable 'isfinite'?]))
 
 # Checks for libraries.
 have_dl=yes
@@ -359,6 +382,8 @@ AC_CHECK_LIBM
 ## CHECK whether this can be replaced by AX_PTHREAD
 AC_SEARCH_LIBS([pthread_create], [pthread pthreadGC2 pthreadGC1 pthreadGC], [],
                AC_MSG_WARN([pthreads required]))
+AC_SEARCH_LIBS([pthread_join], [pthread pthreadGC2 pthreadGC1 pthreadGC], [],
+               AC_MSG_WARN([pthreads required]))
 
 # Illumos needs to link against libsocket for 'sendto' and friends
 AC_SEARCH_LIBS([sendto], [socket])
@@ -372,6 +397,7 @@ AC_SUBST([OSS_LIBS])
 AC_SUBST([ALSA_LIBS])
 AC_SUBST([JACK_CFLAGS])
 AC_SUBST([JACK_LIBS])
+AC_SUBST([SGI_LIBS])
 
 # Whether to strip symbol from binaries (msw_strip="") or not (msw_strip="-n") on windows. Used in msw/Makefile
 AC_SUBST([msw_strip])
@@ -634,6 +660,19 @@ AS_IF([test x$portmidi = xyes],[
     ])
 ],[local_portmidi=no])
 
+##### SGI #####
+AC_ARG_ENABLE([sgi],
+    [AS_HELP_STRING([--disable-sgi], [do not use SGI audio driver])],
+    [sgi=$enableval], [sgi=yes])
+AS_IF([test x$sgi = xyes],[
+    AC_CHECK_HEADERS([dmedia/audio.h], [
+        AC_CHECK_LIB([audio], [alNewConfig], [SGI_LIBS="-laudio ${SGI_LIBS}"], [sgi=no])
+    ], [sgi=no])
+    AC_CHECK_HEADERS([dmedia/midi.h], [
+        AC_CHECK_LIB([md], [mdInit], [SGI_LIBS="-lmd ${SGI_LIBS}"], [sgi=no])
+    ], [sgi=no])
+])
+
 ##### fftw v3 #####
 AC_ARG_ENABLE([fftw],
     [AS_HELP_STRING([--enable-fftw], [use FFTW package])],
@@ -647,6 +686,15 @@ AS_IF([test x$fftw = xyes],[
     ])
 ])
 AM_CONDITIONAL(FFTW, test x$fftw = xyes)
+
+
+###### IPv6 #####
+AC_MSG_CHECKING([whether to enable IPv6])
+AC_ARG_ENABLE([ipv6],
+    [AS_HELP_STRING([--disable-ipv6], [(don't) use IPv6])],
+    [enable_ipv6=$enableval], [enable_ipv6=yes])
+AS_IF([test "${enable_ipv6}" = no], AC_DEFINE([DISABLE_IPV6], 1, [Disable IPv6 networking]))
+AC_MSG_RESULT([${enable_ipv6}])
 
 ##### Wish #####
 AC_ARG_WITH([wish],
@@ -757,6 +805,13 @@ AM_CONDITIONAL(PORTMIDI, test x$portmidi = xyes)
 AM_CONDITIONAL(LOCAL_PORTMIDI, test x$local_portmidi = xyes)
 AS_IF([test x$portmidi = xyes], [midi_backends="PortMidi ${midi_backends}"])
 
+##### SGI #####
+AM_CONDITIONAL(SGI, test "x$sgi" = "xyes")
+AS_IF([test x$sgi = xyes], [audio_backends="SGI ${audio_backends}"])
+AM_CONDITIONAL(SGI, test "x$sgi" = "xyes")
+AS_IF([test "x$sgi" = "xyes"], [midi_backends="SGI ${midi_backends}"])
+
+
 ##### DUMMY #####
 # warn if we end up trying to build without an audio or midi api
 AM_CONDITIONAL(AUDIO_DUMMY, test "x$audio_backends" = "x")
@@ -767,8 +822,9 @@ AS_IF([test "x$audio_backends" = "x"],[
 # we need the dummy MIDI backend, if there is no other backend providing the
 # standard MIDI-functions (OSS and PortMidi provide them; ALSA not)
 needs_midi_dummy="yes"
-AS_IF([echo "${midi_backends}" | grep -wi OSS >/dev/null],[needs_midi_dummy="no"])
-AS_IF([echo "${midi_backends}" | grep -wi PortMidi >/dev/null],[needs_midi_dummy="no"])
+AS_IF([echo "${midi_backends}" | grep -i "\<OSS\>" >/dev/null],[needs_midi_dummy="no"])
+AS_IF([echo "${midi_backends}" | grep -i "\<PortMidi\>" >/dev/null],[needs_midi_dummy="no"])
+AS_IF([echo "${midi_backends}" | grep -i "\<SGI\>" >/dev/null],[needs_midi_dummy="no"])
 
 AM_CONDITIONAL(MIDI_DUMMY, test "x${needs_midi_dummy}" = "xyes")
 AS_IF([test "x$midi_backends" = "x"],[
