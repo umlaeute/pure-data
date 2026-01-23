@@ -14,6 +14,7 @@
 static Tcl_Interp *tcl_interp;
 static Tcl_HashTable tcl_windowlist;
 static Tcl_HashTable tcl_canvaslist;
+int tcl_debug;
 
 /* widget commands to the window, e.g. :
     .x8101610 configure -cursor $cursor_runmode_nothing */
@@ -73,6 +74,13 @@ static int cmd_canvas(ClientData cdata, Tcl_Interp *interp,
         return (TCL_OK);
     }
         /* debugging - print out the list of canvas items */
+    else if (objc >= 3 && !strcmp(Tcl_GetString(objv[1]), "raise") &&
+         !strcmp(Tcl_GetString(objv[2]), "cord"))
+    {
+        /* this was to keep patch cords above everything else - LATER figure out
+        a better way to do that. */
+    }
+        /* debugging - print out the list of canvas items */
     else if (objc >= 2 && !strcmp(Tcl_GetString(objv[1]), "spew"))
         gfx_canvas_spew(x);
     else if (objc >= 2)
@@ -89,7 +97,6 @@ static int cmd_pdtk_text_new(ClientData cdata, Tcl_Interp *interp,
     int objc, Tcl_Obj *const objv[])
 {
     Tcl_HashEntry *hash;
-    fprintf(stderr, "+++++ TEXT +++++\n");
     if (objc != 8)
         fprintf(stderr, "obj count %d, not 8\n", objc);
     else if (!(hash = Tcl_FindHashEntry(&tcl_canvaslist,
@@ -102,7 +109,6 @@ static int cmd_pdtk_text_new(ClientData cdata, Tcl_Interp *interp,
         double px, py, fontsize;
         char tag[80], purpose[80], *endtag;
         int blue;
-        fprintf(stderr, "text1 = [%s]\n", Tcl_GetString(objv[5]));
         if (!cmd_get_tag(Tcl_GetString(objv[2]), tag, &endtag) ||
             !cmd_get_tag(endtag, purpose, 0))
         {
@@ -244,11 +250,11 @@ static int cmd_pdtk_canvas_new(ClientData cdata, Tcl_Interp *interp,
     snprintf(canvasname, 80, "%s.c", tag);
     canvasname[79] = 0;
 
-    xloc = atoi(Tcl_GetString(objv[2]));
-    yloc = atoi(Tcl_GetString(objv[3]));
+    width = atoi(Tcl_GetString(objv[2]));
+    height = atoi(Tcl_GetString(objv[3]));
     geom = Tcl_GetString(objv[4]);
     editmode = atoi(Tcl_GetString(objv[5]));
-    if (sscanf(geom, "+%d+%d", &width, &height) < 2)
+    if (sscanf(geom, "+%d+%d", &xloc, &yloc) < 2)
     {
         fprintf(stderr, "geom (%s)?\n", geom);
         return (TCL_ERROR);
@@ -395,9 +401,12 @@ void tcl_runcommand(char *s)
     if (tcl_isknowncommand(s))
     {
         int rc;
-#ifdef DEBUGTCL
-        fprintf(stderr, "cmd: \'%s\'\n", s);
-#endif
+        if (tcl_debug)
+        {
+            fprintf(stderr, "pdgtk: %s", (s[0] == '\n' ? s+1 : s));
+            if (s[strlen(s)-1] != '\n')
+                fprintf(stderr, "\n");
+        }
         rc = Tcl_Eval(tcl_interp, s);
         /* if (rc != TCL_OK)
             fprintf(stderr, "tcl eval error\n"); */

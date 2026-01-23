@@ -146,6 +146,8 @@ int main(int argc, char **argv)
         fprintf(stderr, "could not send startup string\n");
         return (1);
     }
+    if (getenv("DEBUG"))
+        tcl_debug = 1;
     giochan = g_io_channel_unix_new(sockfd);
     g_io_add_watch(giochan, G_IO_IN, socket_callback, NULL);
 

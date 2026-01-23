@@ -49,5 +49,6 @@ void gfx_canvas_spew(t_canvas *x);
 int socket_open(int portno);
 int socket_send(char *msg);
 
+extern int tcl_debug;
 /* #define DEBUGTCL */
 /* #define DEBUGGTK */

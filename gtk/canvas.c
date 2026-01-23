@@ -196,7 +196,6 @@ void gfx_canvas_addtext(t_canvas *x, char *tag, char *purpose, char *text,
     x->c_n++;
     t->t_text = malloc(strlen(text) + 1);
     strcpy(t->t_text, text);
-    fprintf(stderr, "text = [[[[[%s]]]]]\n", text);
     t->t_x = px;
     t->t_y = py;
     t->t_fontsize = fontsize;
@@ -539,7 +538,7 @@ t_canvas *gfx_canvas_new(const char *tag, int xloc, int yloc,
 
     x->c_drawing_area = gtk_drawing_area_new();
 
-    gtk_widget_set_size_request(x->c_drawing_area, 500, 300);
+    gtk_widget_set_size_request(x->c_drawing_area, width, height);
 
     gtk_frame_set_child(GTK_FRAME(x->c_frame), x->c_drawing_area);
 
