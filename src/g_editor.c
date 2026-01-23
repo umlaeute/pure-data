@@ -2777,10 +2777,10 @@ static int tryconnect(t_canvas*x, t_object *src, int nout,
                 + iom;
             ly2 = y21;
             pdgui_vmess(0, "rcr ii k iiii",
-                "pdtk_canvas_create_line", glist_getcanvas(x), tag,
-                0, (obj_issignaloutlet(src, nout) ? 2 : 1) * x->gl_zoom,
-                    THISGUI->i_foregroundcolor,
-                lx1,ly1, lx2,ly2);
+                "pdtk_canvas_create_patchcord", glist_getcanvas(x), tag,
+                    0, (obj_issignaloutlet(src, nout) ? 2 : 1) * x->gl_zoom,
+                        THISGUI->i_foregroundcolor,
+                            lx1,ly1, lx2,ly2);
             canvas_undo_add(x, UNDO_CONNECT, "connect",
                 canvas_undo_set_connect(x,
                     canvas_getindex(x, &src->ob_g), nout,
@@ -4606,10 +4606,10 @@ void canvas_connect(t_canvas *x, t_floatarg fwhoout, t_floatarg foutno,
         char tag[128];
         sprintf(tag, "l%p", oc);
         pdgui_vmess(0, "rcr iik iiii",
-            "pdtk_canvas_create_line", glist_getcanvas(x), tag,
-            0, (obj_issignaloutlet(objsrc, outno) ? 2 : 1) * x->gl_zoom,
-                THISGUI->i_foregroundcolor,
-            0, 0, 0, 0);
+            "pdtk_canvas_create_patchcord", glist_getcanvas(x), tag,
+                0, (obj_issignaloutlet(objsrc, outno) ? 2 : 1) * x->gl_zoom,
+                    THISGUI->i_foregroundcolor,
+                        0, 0, 0, 0);
         canvas_fixlinesfor(x, objsrc);
     }
     return;

@@ -18,6 +18,7 @@ typedef struct _path
     t_dpoint *p_vec;
     double p_width;
     int p_dashed;
+    int p_patchline;    /* LATER make sure these are drawn in front. */
 } t_path;
 
 typedef struct _rect
@@ -81,7 +82,7 @@ static void gfx_path_draw(t_path *x, t_canvas *c, cairo_t *cr)
 }
 
 void gfx_canvas_addpath(t_canvas *x, char *tag, char *purpose, int dashed,
-    double width, int npoints, double *coords)
+    double width, int npoints, double *coords, int patchline)
 {
     t_path *p;
     t_item *it;
@@ -98,6 +99,7 @@ void gfx_canvas_addpath(t_canvas *x, char *tag, char *purpose, int dashed,
         p->p_vec[i].p_x = coords[2*i], p->p_vec[i].p_y = coords[2*i+1];
     p->p_width = width;
     p->p_dashed = dashed;
+    p->p_patchline = patchline;
     strncpy(it->i_tag, tag, 80);
     it->i_tag[79] = 0;
     strncpy(it->i_purpose, purpose, 8);

@@ -147,18 +147,18 @@ static int cmd_pdtk_text_set(ClientData cdata, Tcl_Interp *interp,
 
  /* cmd_pdtk_canvas_create_line
     <canvas> <tag> <dashed> <width> <color> <coords...> */
-static int cmd_pdtk_canvas_create_line(ClientData cdata, Tcl_Interp *interp,
-    int objc, Tcl_Obj *const objv[])
+static int cmd_pdtk_canvas_do_create_line(ClientData cdata, Tcl_Interp *interp,
+    int objc, Tcl_Obj *const objv[], int patchline)
 {
     Tcl_HashEntry *hash;
     if (objc < 10 || (objc & 1))
     {
-        fprintf(stderr, "pdtk_canvas_create_line: bad #args = %d\n", objc);
+        fprintf(stderr, "pdtk_canvas_do_create_line: bad #args = %d\n", objc);
         return (TCL_ERROR);
     }
     else if (!(hash = Tcl_FindHashEntry(&tcl_canvaslist,
         Tcl_GetString(objv[1]))))
-            fprintf(stderr, "pdtk_canvas_create_line: canvas %s not found\n",
+            fprintf(stderr, "pdtk_canvas_do_create_line: canvas %s not found\n",
                 Tcl_GetString(objv[1]));
     else
     {
@@ -173,10 +173,28 @@ static int cmd_pdtk_canvas_create_line(ClientData cdata, Tcl_Interp *interp,
         for (i = 0; i < 2 * npoints; i++)
             Tcl_GetDouble(interp, Tcl_GetString(objv[6+i]), &coords[i]);
         dashed = strcmp(Tcl_GetString(objv[1]), "");
-        gfx_canvas_addpath(c, tag, "x", dashed, width, npoints, coords);
+        gfx_canvas_addpath(c, tag, "x", dashed, width, npoints, coords,
+            patchline);
     }
     return (TCL_OK);
 }
+
+ /* cmd_pdtk_canvas_create_line
+    <canvas> <tag> <dashed> <width> <color> <coords...> */
+static int cmd_pdtk_canvas_create_line(ClientData cdata, Tcl_Interp *interp,
+    int objc, Tcl_Obj *const objv[])
+{
+    cmd_pdtk_canvas_do_create_line(cdata, interp, objc, objv, 0);
+}
+
+ /* cmd_pdtk_canvas_create_patchcord
+    <canvas> <tag> <dashed> <width> <color> <coords...> */
+static int cmd_pdtk_canvas_create_patchcord(ClientData cdata, Tcl_Interp *interp,
+    int objc, Tcl_Obj *const objv[])
+{
+    cmd_pdtk_canvas_do_create_line(cdata, interp, objc, objv, 1);
+}
+
 
  /* cmd_pdtk_canvas_create_rect
     <canvas> <tag> <width> <color> x1 y1 x2 y2 */
@@ -186,7 +204,7 @@ static int cmd_pdtk_canvas_create_rect(ClientData cdata, Tcl_Interp *interp,
     Tcl_HashEntry *hash;
     if (objc != 9)
     {
-        fprintf(stderr, "pdtk_canvas_create_line: bad #args = %d\n", objc);
+        fprintf(stderr, "pdtk_canvas_create_rect: bad #args = %d\n", objc);
         return (TCL_ERROR);
     }
     else if (!(hash = Tcl_FindHashEntry(&tcl_canvaslist,
@@ -367,6 +385,7 @@ static t_tcl_entry tcl_knowncommands[] = {
     {"pdtk_text_set", cmd_pdtk_text_set},
     {"pdtk_canvas_reflecttitle", cmd_pdtk_canvas_reflecttitle},
     {"pdtk_canvas_create_line", cmd_pdtk_canvas_create_line},
+    {"pdtk_canvas_create_patchcord", cmd_pdtk_canvas_create_patchcord},
     {"pdtk_canvas_create_rect", cmd_pdtk_canvas_create_rect},
     {"pdtk_canvas_delete", cmd_pdtk_canvas_delete},
     {"pdtk_ping", cmd_pdtk_ping},

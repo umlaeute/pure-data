@@ -20,7 +20,7 @@ void gfx_canvas_settitle(t_canvas *x, char *s);
 
 /* add a path (polygon, etc) */
 void gfx_canvas_addpath(t_canvas *x, char *tag, char *purpose, int dashed,
-    double width, int npoints, double *coords);
+    double width, int npoints, double *coords, int patchline);
 
 /* add text */
 void gfx_canvas_addtext(t_canvas *x, char *tag, char *purpose, char *text,

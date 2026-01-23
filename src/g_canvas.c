@@ -1013,10 +1013,10 @@ static void canvas_drawlines(t_canvas *x)
         {
             sprintf(tag, "l%p", oc);
             pdgui_vmess(0, "rcr iik iiii",
-                "pdtk_canvas_create_line", glist_getcanvas(x), tag,
-                0, (outlet_getsymbol(t.tr_outlet) == &s_signal ? 2:1)
-                    * x->gl_zoom, THISGUI->i_foregroundcolor,
-                t.tr_lx1, t.tr_ly1, t.tr_lx2, t.tr_ly2);
+                "pdtk_canvas_create_patchcord", glist_getcanvas(x), tag,
+                    0, (outlet_getsymbol(t.tr_outlet) == &s_signal ? 2:1)
+                        * x->gl_zoom, THISGUI->i_foregroundcolor,
+                    t.tr_lx1, t.tr_ly1, t.tr_lx2, t.tr_ly2);
         }
     }
 }
