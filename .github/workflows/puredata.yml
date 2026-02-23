@@ -13,4 +13,4 @@ on:
 
 jobs:
   puredata:
-    uses: pure-data/pure-data-ci/.github/workflows/puredata.yml@main
+    uses: pure-data/pure-data-ci/.github/workflows/puredata.yml@64bit-builds
