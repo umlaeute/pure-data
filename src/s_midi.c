@@ -145,24 +145,22 @@ static double sys_getmidiinrealtime(void)
 static void sys_putnext(void)
 {
     int portno = midi_outqueue[midi_outtail].q_portno;
+    if (0) {
 #ifdef USEAPI_ALSA
-    if (sys_midiapi == API_ALSA)
-      {
+    } else if (sys_midiapi == API_ALSA) {
         if (midi_outqueue[midi_outtail].q_onebyte)
           sys_alsa_putmidibyte(portno, midi_outqueue[midi_outtail].q_byte1);
         else sys_alsa_putmidimess(portno, midi_outqueue[midi_outtail].q_byte1,
                              midi_outqueue[midi_outtail].q_byte2,
                              midi_outqueue[midi_outtail].q_byte3);
-      }
-    else
 #endif /* ALSA */
-      {
+    } else {
         if (midi_outqueue[midi_outtail].q_onebyte)
-          sys_putmidibyte(portno, midi_outqueue[midi_outtail].q_byte1);
+            sys_putmidibyte(portno, midi_outqueue[midi_outtail].q_byte1);
         else sys_putmidimess(portno, midi_outqueue[midi_outtail].q_byte1,
                              midi_outqueue[midi_outtail].q_byte2,
                              midi_outqueue[midi_outtail].q_byte3);
-      }
+    }
     midi_outtail  = (midi_outtail + 1 == MIDIQSIZE ? 0 : midi_outtail + 1);
 }
 
@@ -272,15 +270,13 @@ void outmidi_polyaftertouch(int portno, int channel, int pitch, int value)
 
 void outmidi_byte(int portno, int value)
 {
+    if (0) {
 #ifdef USEAPI_ALSA
-  if (sys_midiapi == API_ALSA)
-    {
-      sys_alsa_putmidibyte(portno, value);
-    }
-  else
+    } else if (sys_midiapi == API_ALSA) {
+        sys_alsa_putmidibyte(portno, value);
 #endif
-    {
-      sys_putmidibyte(portno, value);
+    } else {
+        sys_putmidibyte(portno, value);
     }
 }
 
@@ -497,12 +493,14 @@ void sys_pollmidiqueue(void)
     double outbuftime = sched_get_using_audio() == SCHED_AUDIO_POLL ?
         (sys_schedadvance * 1e-6) : 0;
     sys_setmiditimediff(0, outbuftime);
+    if (0) {
 #ifdef USEAPI_ALSA
-      if (sys_midiapi == API_ALSA)
+    } else if (sys_midiapi == API_ALSA) {
         sys_alsa_poll_midi();
-      else
 #endif /* ALSA */
-    sys_poll_midi();    /* OS dependent poll for MIDI input */
+    } else {
+        sys_poll_midi();    /* OS dependent poll for MIDI input */
+    }
     sys_pollmidioutqueue();
     sys_pollmidiinqueue();
 }
@@ -603,12 +601,14 @@ void sys_open_midi(int nmidiindev, int *midiindev,
 #ifdef USEAPI_OSS
         midi_oss_init();
 #endif
+        if (0) {
 #ifdef USEAPI_ALSA
-        if (sys_midiapi == API_ALSA)
+        } else if (sys_midiapi == API_ALSA) {
             sys_alsa_do_open_midi(nmidiindev, midiindev, nmidioutdev, midioutdev);
-        else
 #endif /* ALSA */
+        } else {
             sys_do_open_midi(nmidiindev, midiindev, nmidioutdev, midioutdev);
+        }
     }
     sys_save_midi_params(nmidiindev, midiindev,
         nmidioutdev, midioutdev);
@@ -678,12 +678,14 @@ void glob_midi_setapi(void *dummy, t_floatarg f)
     int newapi = f;
     if (newapi != sys_midiapi)
     {
+        if (0) {
 #ifdef USEAPI_ALSA
-        if (sys_midiapi == API_ALSA)
+        } else if (sys_midiapi == API_ALSA) {
             sys_alsa_close_midi();
-        else
 #endif
+        } else {
             sys_close_midi();
+        }
         sys_midiapi = newapi;
         sys_reopen_midi();
     }
@@ -708,15 +710,13 @@ void sys_gui_midipreferences(void) {
 
         /* query the current MIDI settings */
         /* on macOS, this causes a crash in 'callback' mode when audio is running */
+    if (0) {
 #ifdef __APPLE__
-    if (sched_get_using_audio() == SCHED_AUDIO_CALLBACK)
-    {
+    } else if (sched_get_using_audio() == SCHED_AUDIO_CALLBACK) {
         pd_error(0, "Cannot load MIDI settings in 'callback' mode when audio is running.");
         nindev = noutdev = nindevs = noutdevs = 0;
-    }
-    else
 #endif
-    {
+    } else {
         sys_reinit_midi();
         sys_get_midi_devs(indevlist, &nindevs, outdevlist, &noutdevs,
             MAXNDEV, DEVDESCSIZE);
@@ -800,15 +800,16 @@ void glob_midi_dialog(t_pd *dummy, t_symbol *s, int argc, t_atom *argv)
 #endif
     sys_save_midi_params(nindev, newmidiindev,
         noutdev, newmidioutdev);
+    if (0) {
 #ifdef USEAPI_ALSA
-    if (sys_midiapi == API_ALSA)
-    {
+    } else if (sys_midiapi == API_ALSA) {
         sys_alsa_close_midi();
+            /* so the ALSA api knows about the number of devices */
+            //midi_alsa_setndevs(midi_nmidiindev, midi_nmidioutdev);
+
         sys_open_midi(alsadevin, newmidiindev, alsadevout, newmidioutdev, 1);
-    }
-    else
 #endif
-    {
+    } else {
         sys_close_midi();
         sys_open_midi(nindev, newmidiindev, noutdev, newmidioutdev, 1);
     }
@@ -819,14 +820,15 @@ void sys_get_midi_devs(char *indevlist, int *nindevs,
                        char *outdevlist, int *noutdevs,
                        int maxndevs, int devdescsize)
 {
-
+    if (0) {
 #ifdef USEAPI_ALSA
-  if (sys_midiapi == API_ALSA)
-    midi_alsa_getdevs(indevlist, nindevs, outdevlist, noutdevs,
-                      maxndevs, devdescsize);
-  else
+    } else if (sys_midiapi == API_ALSA) {
+        midi_alsa_getdevs(indevlist, nindevs, outdevlist, noutdevs,
+            maxndevs, devdescsize);
 #endif /* ALSA */
-  midi_getdevs(indevlist, nindevs, outdevlist, noutdevs, maxndevs, devdescsize);
+    } else {
+        midi_getdevs(indevlist, nindevs, outdevlist, noutdevs, maxndevs, devdescsize);
+    }
 }
 
 /* convert a device name to a (1-based) device number.  (Output device if
@@ -885,10 +887,12 @@ void sys_mididevnumbertoname(int output, int devno, char *name, int namesize)
     }
     sys_get_midi_devs(indevlist, &nindevs, outdevlist, &noutdevs,
         MAXNDEV, DEVDESCSIZE);
-    if (output && (devno < noutdevs))
+    if (output && (devno < noutdevs)) {
         strncpy(name, outdevlist + devno * DEVDESCSIZE, namesize);
-    else if (!output && (devno < nindevs))
+
+    } else if (!output && (devno < nindevs)) {
         strncpy(name, indevlist + devno * DEVDESCSIZE, namesize);
+    }
     else *name = 0;
     name[namesize-1] = 0;
 }
