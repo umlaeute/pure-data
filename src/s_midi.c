@@ -761,27 +761,14 @@ void glob_midi_dialog(t_pd *dummy, t_symbol *s, int argc, t_atom *argv)
     int newmidiindev[MAXMIDIDEV_GUI], newmidioutdev[MAXMIDIDEV_GUI];
     int alsadevin, alsadevout;
 
+        /* get the list of valid selected devices */
     for (i = 0; i < MAXMIDIDEV_GUI; i++)
     {
-        newmidiindev[i] = atom_getfloatarg(i, argc, argv);
-        newmidioutdev[i] = atom_getfloatarg(i+MAXMIDIDEV_GUI, argc, argv);
-    }
+        int indev  = atom_getfloatarg(i               , argc, argv);
+        int outdev = atom_getfloatarg(i+MAXMIDIDEV_GUI, argc, argv);
 
-    for (i = 0, nindev = 0; i < MAXMIDIDEV_GUI; i++)
-    {
-        if (newmidiindev[i] > 0)
-        {
-            newmidiindev[nindev] = newmidiindev[i]-1;
-            nindev++;
-        }
-    }
-    for (i = 0, noutdev = 0; i < MAXMIDIDEV_GUI; i++)
-    {
-        if (newmidioutdev[i] > 0)
-        {
-            newmidioutdev[noutdev] = newmidioutdev[i]-1;
-            noutdev++;
-        }
+        if (indev  > 0) newmidiindev [nindev ++] = indev;
+        if (outdev > 0) newmidioutdev[noutdev++] = outdev;
     }
     alsadevin  = atom_getfloatarg(2*MAXMIDIDEV_GUI+0, argc, argv);
     alsadevout = atom_getfloatarg(2*MAXMIDIDEV_GUI+1, argc, argv);
