@@ -40,7 +40,7 @@ static int alsa_midioutfd[MAXMIDIOUTDEV];
 
 static snd_seq_t *midi_handle = NULL;
 
-static snd_midi_event_t *midiev;
+static snd_midi_event_t *midiev = NULL;
 
 void sys_alsa_do_open_midi(int nmidiin, int *midiinvec,
     int nmidiout, int *midioutvec)
@@ -113,7 +113,8 @@ void sys_alsa_do_open_midi(int nmidiin, int *midiinvec,
         post("opened alsa MIDI client %d in:%d out:%d",
             client, nmidiin, nmidiout);
     sys_setalarm(0);
-    snd_midi_event_new(ALSA_MAX_EVENT_SIZE, &midiev);
+    if(!midiev)
+        snd_midi_event_new(ALSA_MAX_EVENT_SIZE, &midiev);
     alsa_nmidiout = nmidiout;
     alsa_nmidiin = nmidiin;
 
