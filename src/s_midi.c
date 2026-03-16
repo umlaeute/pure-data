@@ -795,7 +795,7 @@ void glob_midi_dialog(t_pd *dummy, t_symbol *s, int argc, t_atom *argv)
     } else if (sys_midiapi == API_ALSA) {
         sys_alsa_close_midi();
             /* so the ALSA api knows about the number of devices */
-            //midi_alsa_setndevs(midi_nmidiindev, midi_nmidioutdev);
+        midi_alsa_setndevs(midi_nmidiindev, midi_nmidioutdev);
 
         sys_open_midi(alsadevin, newmidiindev, alsadevout, newmidioutdev, 1);
 #endif
