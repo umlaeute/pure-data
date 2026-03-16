@@ -758,7 +758,7 @@ void glob_midi_dialog(t_pd *dummy, t_symbol *s, int argc, t_atom *argv)
     int nmidiindev, midiindev[MAXMIDIINDEV];
     int nmidioutdev, midioutdev[MAXMIDIOUTDEV];
     int i, nindev=0, noutdev=0;
-    int newmidiindev[MAXMIDIDEV_GUI], newmidioutdev[MAXMIDIDEV_GUI];
+    int newmidiindev[MAXMIDIINDEV], newmidioutdev[MAXMIDIOUTDEV];
     int alsadevin, alsadevout;
 
     memset(midiindev, 0, sizeof(midiindev));
