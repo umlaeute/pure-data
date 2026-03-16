@@ -761,6 +761,9 @@ void glob_midi_dialog(t_pd *dummy, t_symbol *s, int argc, t_atom *argv)
     int newmidiindev[MAXMIDIDEV_GUI], newmidioutdev[MAXMIDIDEV_GUI];
     int alsadevin, alsadevout;
 
+    memset(midiindev, 0, sizeof(midiindev));
+    memset(midioutdev, 0, sizeof(midioutdev));
+
         /* get the list of valid selected devices */
     for (i = 0; i < MAXMIDIDEV_GUI; i++)
     {
@@ -870,6 +873,8 @@ void sys_mididevnumbertoname(int output, int devno, char *name, int namesize)
 {
     char indevlist[MAXNDEV*DEVDESCSIZE], outdevlist[MAXNDEV*DEVDESCSIZE];
     int nindevs = 0, noutdevs = 0, i;
+    memset(indevlist, 0, MAXNDEV*DEVDESCSIZE);
+    memset(outdevlist, 0, MAXNDEV*DEVDESCSIZE);
     if (devno < 0)
     {
         *name = 0;
