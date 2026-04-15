@@ -6,10 +6,12 @@ dnl with or without modifications, as long as this notice is preserved.
 # PD_CHECK_UNIVERSAL([VARIABLE-NAME], [ACTION-IF-SUCCESS], [ACTION-IF-NO-SUCCESS])
 # will enable the "--enable-universal=<ARCHS>" flag
 # if <ARCH> is "yes", platform defaults are used
-# the system tries to build a test program with the archs, on success it calls ACTION-IF-SUCCESS, and ACTION-IF-NO-SUCCESS otherwise
-# on success it will also add the flags to:
-# [VARIABLE-NAME]_CFLAGS will hold a list of cflags to compile for all requested archs
-# [VARIABLE-NAME]_LDFLAGS will hold a list of ldflags to link for all requested archs
+# the system tries to build a test program with the archs
+# on success it calls ACTION-IF-SUCCESS, and ACTION-IF-NO-SUCCESS otherwise
+# on success it set the following variables:
+# [VARIABLE-NAME]_CFLAGS will hold a list of cflags to compile for all usable archs
+# [VARIABLE-NAME]_LDFLAGS will hold a list of ldflags to link for all usable archs
+# [VARIABLE_NAME]_ARCHITECTURES will hold a comma-separated list of usable archs
 
 AC_DEFUN([PD_CHECK_UNIVERSAL], [
 
@@ -54,6 +56,7 @@ if test "$universal_binary" != no; then
 
   # /usr/lib/arch_tool -archify_list $TARGET_ARCHS
   _pd_universal=""
+  _pd_archs=""
   for arch in $TARGET_ARCHS; do
 
     # run checks whether the compiler linker likes this...
@@ -67,6 +70,7 @@ if test "$universal_binary" != no; then
     AC_MSG_CHECKING([if linker accepts arch: $arch])
     AC_LINK_IFELSE([AC_LANG_PROGRAM([],[])], [
       _pd_universal="$_pd_universal -arch $arch"
+      _pd_archs="$_pd_archs,$arch"
       AC_MSG_RESULT([yes])
     ], [
       AC_MSG_RESULT([no])
@@ -81,6 +85,7 @@ if test "$universal_binary" != no; then
   if test "x$_pd_universal" != "x"; then    
     $1[]_CFLAGS="$[]$1[]_CFLAGS $_pd_universal"
     $1[]_LDFLAGS="$[]$1[]_LDFLAGS $_pd_universal"
+    $1[]_ARCHITECTURES="${_pd_archs#,}"
     AC_SUBST($1[]_CFLAGS)
     AC_SUBST($1[]_LDFLAGS)
     [$2]
