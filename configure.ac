@@ -203,18 +203,6 @@ AS_CASE([$host],
 
 AS_IF([test "x${deken_os}" = "xwindows"],[deken_ext=dll])
 
-
-AS_CASE([$host_cpu],
-    [x86_64|amd64],[deken_cpu=amd64],
-    [i386|i486|i586|i686],[deken_cpu=i386],
-    [aarch64],[deken_cpu=arm64],
-    [armv*l],[deken_cpu=${host_cpu%l}],
-    [armv*b],[deken_cpu=${host_cpu}],
-    [powerpc64],[deken_cpu=ppc64],
-    [powerpc],[deken_cpu=ppc],
-    [])
-
-
 AM_CONDITIONAL(ANDROID, test x$ANDROID = xyes)
 AM_CONDITIONAL(IPHONEOS, test x$IPHONEOS = xyes)
 AM_CONDITIONAL(LINUX, test x$LINUX = xyes)
@@ -669,6 +657,19 @@ AS_IF([test "$gtk" = yes],[
 AM_CONDITIONAL(GTK, test x$gtk = xyes)
 
 ##### Deken OS and CPU #####
+universal_cpu="${UNIVERSAL_ARCHITECTURES}"
+AS_IF([test "${universal_cpu}" = ""], [universal_cpu=$host_cpu])
+AS_CASE([$universal_cpu],
+    [*,*],[deken_cpu=fat],
+    [x86_64|amd64],[deken_cpu=amd64],
+    [i386|i486|i586|i686],[deken_cpu=i386],
+    [aarch64],[deken_cpu=arm64],
+    [armv*l],[deken_cpu=${host_cpu%l}],
+    [armv*b],[deken_cpu=${host_cpu}],
+    [powerpc64],[deken_cpu=ppc64],
+    [powerpc],[deken_cpu=ppc],
+    [])
+
 AC_ARG_WITH([deken-os],
     [AS_HELP_STRING([--with-deken-os=<OS>],
         [Operating System string to use for externals (e.g. Linux, Windows, Darwin,...)])],
