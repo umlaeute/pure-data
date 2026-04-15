@@ -458,12 +458,9 @@ AM_CONDITIONAL(LIBPD_MULTIINSTANCE, test x$enable_libpd_instance = xyes)
 AM_CONDITIONAL(LIBPD_NO_SETLOCALE, test x$enable_libpd_setlocale = xno)
 
 ##### Universal/multi architecture build on macOS #####
-PD_CHECK_UNIVERSAL(ARCH, [universal=yes], [universal=no])
-AM_CONDITIONAL(UNIVERSAL, test x$universal = xyes)
-AS_IF([test x$universal = xyes],[
-    PD_CFLAGS="$ARCH_CFLAGS $PD_CFLAGS"
-    PD_LDFLAGS="$ARCH_LDFLAGS $PD_LDFLAGS"
-])
+PD_CHECK_UNIVERSAL(UNIVERSAL, [universal=yes], [universal=no])
+PD_CFLAGS="$UNIVERSAL_CFLAGS $PD_CFLAGS"
+PD_LDFLAGS="$UNIVERSAL_LDFLAGS $PD_LDFLAGS"
 
 ##### Gettext #####
 # Gettext is needed to build language localizations.
